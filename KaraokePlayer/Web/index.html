@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Karaoke Queue</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #0b0b0c;
+        color: #e9ecef;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+        padding: 24px;
+      }
+      .panel {
+        background: #121317;
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .panel h2 {
+        margin: 0 0 12px 0;
+        font-size: 20px;
+      }
+      .song-list,
+      .queue-list {
+        display: grid;
+        gap: 10px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: #1a1c22;
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+      .meta {
+        display: grid;
+        gap: 2px;
+      }
+      .title {
+        font-weight: 600;
+      }
+      .artist {
+        font-size: 12px;
+        color: #a7adb7;
+      }
+      button.add {
+        background: #1c4f8a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button.add:hover {
+        background: #2360a7;
+      }
+      .empty {
+        color: #a7adb7;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <section class="panel">
+        <h2>Library</h2>
+        <div id="libraryList" class="song-list"></div>
+      </section>
+      <section class="panel">
+        <h2>Queue</h2>
+        <div id="queueList" class="queue-list"></div>
+        <div id="queueEmpty" class="empty" style="display:none;">Queue is empty.</div>
+      </section>
+    </div>
+
+    <script>
+      const libraryList = document.getElementById("libraryList");
+      const queueList = document.getElementById("queueList");
+      const queueEmpty = document.getElementById("queueEmpty");
+
+      async function loadLibrary() {
+        const response = await fetch("/api/library");
+        if (!response.ok) return;
+        const items = await response.json();
+        libraryList.innerHTML = "";
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `
+            <div class="meta">
+              <div class="title">${item.title}</div>
+              <div class="artist">${item.artist}</div>
+            </div>
+            <button class="add">Add</button>
+          `;
+          row.querySelector("button").addEventListener("click", () => addToQueue(item.id));
+          libraryList.appendChild(row);
+        });
+      }
+
+      async function loadQueue() {
+        const response = await fetch("/api/queue");
+        if (!response.ok) return;
+        const items = await response.json();
+        queueList.innerHTML = "";
+        if (items.length === 0) {
+          queueEmpty.style.display = "block";
+          return;
+        }
+        queueEmpty.style.display = "none";
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `
+            <div class="meta">
+              <div class="title">${item.title}</div>
+              <div class="artist">${item.artist}</div>
+            </div>
+          `;
+          queueList.appendChild(row);
+        });
+      }
+
+      async function addToQueue(songId) {
+        await fetch("/api/queue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ songId })
+        });
+        await loadQueue();
+      }
+
+      loadLibrary();
+      loadQueue();
+      setInterval(loadQueue, 2000);
+    </script>
+  </body>
+</html>

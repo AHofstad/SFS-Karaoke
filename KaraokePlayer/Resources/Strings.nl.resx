@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Karaoke Player</value>
+  </data>
+  <data name="SongLibraryTitle" xml:space="preserve">
+    <value>Liedbibliotheek</value>
+  </data>
+  <data name="ReloadLibraryButton" xml:space="preserve">
+    <value>Bibliotheek vernieuwen</value>
+  </data>
+  <data name="SkipToFirstNoteButton" xml:space="preserve">
+    <value>Ga naar eerste noot</value>
+  </data>
+  <data name="SkipToFirstNotePrompt" xml:space="preserve">
+    <value>Druk op Enter om naar de eerste noot te gaan</value>
+  </data>
+  <data name="VideoSurfacePlaceholder" xml:space="preserve">
+    <value>Video-oppervlak</value>
+  </data>
+  <data name="LyricsOverlayPlaceholder" xml:space="preserve">
+    <value>Tekstoverlay</value>
+  </data>
+  <data name="LoadingLabel" xml:space="preserve">
+    <value>Laden</value>
+  </data>
+  <data name="RemainingLabel" xml:space="preserve">
+    <value>Resterend:</value>
+  </data>
+  <data name="MainMenuTitle" xml:space="preserve">
+    <value>Hoofdmenu</value>
+  </data>
+  <data name="StartQueueButton" xml:space="preserve">
+    <value>Ga naar speler</value>
+  </data>
+  <data name="OptionsButton" xml:space="preserve">
+    <value>Opties</value>
+  </data>
+  <data name="OptionsTitle" xml:space="preserve">
+    <value>Opties</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>Sluiten</value>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>Liedjes laden...</value>
+  </data>
+  <data name="StatusLoaded" xml:space="preserve">
+    <value>Liedjes geladen.</value>
+  </data>
+  <data name="StatusMissing" xml:space="preserve">
+    <value>Map met liedjes niet gevonden.</value>
+  </data>
+  <data name="SelectedSongTitleLabel" xml:space="preserve">
+    <value>Geselecteerd nummer</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="ArtistLabel" xml:space="preserve">
+    <value>Artiest</value>
+  </data>
+  <data name="AudioLabel" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="VideoLabel" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="BpmLabel" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="CoverLabel" xml:space="preserve">
+    <value>Omslag</value>
+  </data>
+  <data name="CoverPlaceholder" xml:space="preserve">
+    <value>Geen omslag</value>
+  </data>
+  <data name="SongsFolderLabel" xml:space="preserve">
+    <value>Map met liedjes</value>
+  </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>Bladeren</value>
+  </data>
+  <data name="SongsFolderDialogTitle" xml:space="preserve">
+    <value>Selecteer map met liedjes</value>
+  </data>
+  <data name="EnterWindowedButton" xml:space="preserve">
+    <value>Venstermodus</value>
+  </data>
+  <data name="EnterFullscreenButton" xml:space="preserve">
+    <value>Schermvullend</value>
+  </data>
+  <data name="WindowModeLabel" xml:space="preserve">
+    <value>Venstermodus</value>
+  </data>
+  <data name="WindowModeBorderless" xml:space="preserve">
+    <value>Randloos schermvullend</value>
+  </data>
+  <data name="WindowModeWindowed" xml:space="preserve">
+    <value>Venster</value>
+  </data>
+  <data name="ExitButton" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="QueueTitle" xml:space="preserve">
+    <value>Wachtrij</value>
+  </data>
+  <data name="QueueEmptyMessage" xml:space="preserve">
+    <value>Wachtrij is leeg.</value>
+  </data>
+  <data name="StartKaraokeButton" xml:space="preserve">
+    <value>Start karaoke</value>
+  </data>
+</root>

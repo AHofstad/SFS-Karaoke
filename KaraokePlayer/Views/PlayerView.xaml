@@ -1,0 +1,122 @@
+<UserControl x:Class="KaraokePlayer.Views.PlayerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:loc="clr-namespace:KaraokePlayer.Localization"
+             xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:local="clr-namespace:KaraokePlayer"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+  <UserControl.Resources>
+    <sys:Double x:Key="PlayerBaseWidth">1280</sys:Double>
+    <sys:Double x:Key="PlayerBaseHeight">720</sys:Double>
+    <sys:Double x:Key="PlayerDetailsWidth">320</sys:Double>
+    <sys:Double x:Key="PlayerOverlayWidth">240</sys:Double>
+    <sys:Double x:Key="PlayerOverlayHeight">64</sys:Double>
+    <GridLength x:Key="PlayerSidebarWidth">3*</GridLength>
+    <GridLength x:Key="PlayerContentWidth">7*</GridLength>
+  </UserControl.Resources>
+
+  <Viewbox Stretch="Uniform" StretchDirection="Both">
+    <Grid Width="{StaticResource PlayerBaseWidth}" Height="{StaticResource PlayerBaseHeight}">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="{StaticResource PlayerSidebarWidth}" />
+      <ColumnDefinition Width="{StaticResource PlayerContentWidth}" />
+    </Grid.ColumnDefinitions>
+
+    <Border Grid.Column="0" Background="{DynamicResource PanelBrush}">
+      <DockPanel LastChildFill="True" Margin="16">
+        <StackPanel DockPanel.Dock="Top">
+          <TextBlock x:Name="SongLibraryTitleText" Text="{Binding [SongLibraryTitle], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource TextBrush}" FontSize="18" FontWeight="Bold" />
+          <TextBlock x:Name="LibraryPathText" Text="{Binding LibraryPath}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" Margin="0,4,0,12" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding Songs}" SelectedItem="{Binding SelectedSong}" Background="#121317" BorderThickness="0" Foreground="{DynamicResource TextBrush}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Margin="8">
+                <TextBlock x:Name="SongListItemTitleText" Text="{Binding Metadata.Title}" FontWeight="SemiBold" />
+                <TextBlock x:Name="SongListItemArtistText" Text="{Binding Metadata.Artist}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+          <Button Content="{Binding [ReloadLibraryButton], Source={x:Static loc:LocalizationService.Instance}}" Height="36" Margin="0,0,0,8" Click="ReloadLibrary_Click" />
+          <Button Content="{Binding [SkipToFirstNoteButton], Source={x:Static loc:LocalizationService.Instance}}" Height="36" Command="{x:Static local:MainWindow.SkipToFirstNoteCommand}" />
+          <TextBlock x:Name="StatusText" Text="{Binding Status}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" Margin="0,10,0,0" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Column="1">
+      <Border Background="{DynamicResource PanelBrush}" CornerRadius="{DynamicResource CornerRadius}" Margin="16" HorizontalAlignment="Right" VerticalAlignment="Top" Width="{StaticResource PlayerDetailsWidth}">
+        <StackPanel Margin="14">
+          <TextBlock x:Name="SelectedSongTitleLabelText" Text="{Binding [SelectedSongTitleLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
+          <StackPanel Margin="0,0,0,6">
+            <TextBlock x:Name="TitleLabelText" Text="{Binding [TitleLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <TextBlock x:Name="SelectedSongTitleText" Text="{Binding SelectedSongTitle}" Foreground="{DynamicResource TextBrush}" FontSize="13" />
+          </StackPanel>
+          <StackPanel Margin="0,0,0,6">
+            <TextBlock x:Name="ArtistLabelText" Text="{Binding [ArtistLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <TextBlock x:Name="SelectedSongArtistText" Text="{Binding SelectedSongArtist}" Foreground="{DynamicResource TextBrush}" FontSize="13" />
+          </StackPanel>
+          <StackPanel Margin="0,0,0,6">
+            <TextBlock x:Name="AudioLabelText" Text="{Binding [AudioLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <TextBlock x:Name="SelectedSongAudioText" Text="{Binding SelectedSongAudio}" Foreground="{DynamicResource TextBrush}" FontSize="12" TextWrapping="Wrap" />
+          </StackPanel>
+          <StackPanel Margin="0,0,0,6">
+            <TextBlock x:Name="VideoLabelText" Text="{Binding [VideoLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <TextBlock x:Name="SelectedSongVideoText" Text="{Binding SelectedSongVideo}" Foreground="{DynamicResource TextBrush}" FontSize="12" TextWrapping="Wrap" />
+          </StackPanel>
+          <StackPanel Margin="0,0,0,6">
+            <TextBlock x:Name="CoverLabelText" Text="{Binding [CoverLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <Border Background="#111216" CornerRadius="6" Height="120" Margin="0,6,0,0">
+              <Grid>
+                <Image Source="{Binding SelectedSongCoverPath}" Stretch="UniformToFill" />
+                <TextBlock x:Name="SelectedSongCoverDisplayText" Text="{Binding SelectedSongCoverDisplay}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock x:Name="BpmLabelText" Text="{Binding [BpmLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+            <TextBlock x:Name="SelectedSongBpmText" Text="{Binding SelectedSongBpm}" Foreground="{DynamicResource TextBrush}" FontSize="13" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Background="#0B0B0C" CornerRadius="{DynamicResource CornerRadius}" Margin="16,120,16,16">
+        <Grid>
+          <vlc:VideoView x:Name="VideoSurface" />
+          <TextBlock x:Name="LyricsOverlayPlaceholderText" Text="{Binding [LyricsOverlayPlaceholder], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="36" Margin="0,0,0,40" />
+        </Grid>
+      </Border>
+
+      <Border Width="{StaticResource PlayerOverlayWidth}" Height="{StaticResource PlayerOverlayHeight}"
+              Background="{DynamicResource PanelBrush}" CornerRadius="{DynamicResource CornerRadius}"
+              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="32">
+        <Grid Margin="12">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock x:Name="LoadingLabelText" Text="{Binding [LoadingLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+          <ProgressBar x:Name="LoadingProgressBar" Grid.Row="1" Height="12" Margin="0,6,0,0" Value="{Binding LoadingProgress}" Foreground="{DynamicResource AccentBrush}" />
+        </Grid>
+      </Border>
+
+      <Border Background="{DynamicResource PanelBrush}" CornerRadius="{DynamicResource CornerRadius}"
+              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="32,110,0,0" Padding="10,6">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock x:Name="RemainingLabelText" Text="{Binding [RemainingLabel], Source={x:Static loc:LocalizationService.Instance}}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+          <TextBlock x:Name="RemainingTimeText" Text="{Binding RemainingTime}" Foreground="{DynamicResource TextBrush}" FontSize="11" Margin="6,0,0,0" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
+  </Viewbox>
+</UserControl>

@@ -1,0 +1,41 @@
+<UserControl x:Class="KaraokePlayer.Views.MainMenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:loc="clr-namespace:KaraokePlayer.Localization"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:local="clr-namespace:KaraokePlayer.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+  <UserControl.Resources>
+    <sys:Double x:Key="MenuBaseWidth">600</sys:Double>
+    <sys:Double x:Key="MenuBaseHeight">420</sys:Double>
+    <Thickness x:Key="MenuPadding">28</Thickness>
+    <sys:Double x:Key="MenuTitleSize">28</sys:Double>
+    <sys:Double x:Key="MenuButtonHeight">48</sys:Double>
+    <sys:Double x:Key="MenuButtonMinWidth">260</sys:Double>
+  </UserControl.Resources>
+
+  <Viewbox Stretch="Uniform" StretchDirection="Both">
+    <Grid Width="{StaticResource MenuBaseWidth}" Height="{StaticResource MenuBaseHeight}">
+      <Border Background="#191A1E" CornerRadius="14" Padding="{StaticResource MenuPadding}">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock x:Name="MainMenuTitleText"
+                     Text="{Binding [MainMenuTitle], Source={x:Static loc:LocalizationService.Instance}}"
+                     Foreground="{DynamicResource TextBrush}" FontSize="{StaticResource MenuTitleSize}" FontWeight="Bold"
+                     Margin="0,0,0,18" TextAlignment="Center" />
+          <Button Content="{Binding [StartQueueButton], Source={x:Static loc:LocalizationService.Instance}}"
+                  Height="{StaticResource MenuButtonHeight}" MinWidth="{StaticResource MenuButtonMinWidth}"
+                  Margin="0,0,0,12" Click="EnterPlayer_Click" />
+          <Button Content="{Binding [OptionsButton], Source={x:Static loc:LocalizationService.Instance}}"
+                  Height="{StaticResource MenuButtonHeight}" MinWidth="{StaticResource MenuButtonMinWidth}"
+                  Click="Options_Click" />
+          <Button Content="{Binding [ExitButton], Source={x:Static loc:LocalizationService.Instance}}"
+                  Height="{StaticResource MenuButtonHeight}" MinWidth="{StaticResource MenuButtonMinWidth}"
+                  Margin="0,12,0,0" Click="Exit_Click" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Viewbox>
+</UserControl>

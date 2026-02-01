@@ -1,0 +1,108 @@
+<Window x:Class="KaraokePlayer.Views.QueueOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:converters="clr-namespace:KaraokePlayer.Converters"
+        xmlns:controls="clr-namespace:KaraokePlayer.Controls"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="False">
+  <Window.Resources>
+    <converters:MultiplyConverter x:Key="MultiplyConverter" />
+    <sys:Double x:Key="OverlayItemSizeRatio">0.56</sys:Double>
+    <sys:Double x:Key="OverlayItemFontRatio">0.06</sys:Double>
+    <sys:Double x:Key="OverlayTitleFontSize">26</sys:Double>
+    <sys:Double x:Key="OverlayBaseWidth">1280</sys:Double>
+    <sys:Double x:Key="OverlayBaseHeight">220</sys:Double>
+    <Thickness x:Key="OverlayItemMargin">8</Thickness>
+    <Thickness x:Key="OverlayTextMargin">6</Thickness>
+    <Thickness x:Key="OverlaySelectedBorder">3</Thickness>
+    <Thickness x:Key="OverlayUnselectedBorder">0</Thickness>
+    <SolidColorBrush x:Key="OverlayBackground" Color="#990B0B0C" />
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0"
+            Background="#7A0B0B0C"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Padding="18,8">
+      <controls:OutlinedTextBlock x:Name="QueueOverlayTitleText"
+                                  Fill="White"
+                                  Stroke="Black"
+                                  StrokeThickness="1"
+                                  FontSize="{StaticResource OverlayTitleFontSize}"
+                                  FontWeight="Bold"
+                                  TextAlignment="Center"
+                                  HorizontalAlignment="Stretch"
+                                  Width="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=ActualWidth}"
+                                  VerticalAlignment="Center">
+        <controls:OutlinedTextBlock.Text>
+          <MultiBinding StringFormat="{}{0} - {1}">
+            <Binding Path="SelectedSong.Metadata.Artist" />
+            <Binding Path="SelectedSong.Metadata.Title" />
+          </MultiBinding>
+        </controls:OutlinedTextBlock.Text>
+      </controls:OutlinedTextBlock>
+    </Border>
+
+    <Border x:Name="BottomBar"
+            Grid.Row="1"
+            Background="{StaticResource OverlayBackground}">
+      <ItemsControl ItemsSource="{Binding PreviewItems}"
+                    HorizontalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Margin="12" HorizontalAlignment="Center" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid Width="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemSizeRatio}}"
+                  Height="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemSizeRatio}}">
+              <Border x:Name="CoverBorder"
+                      Background="#111216"
+                      BorderThickness="{StaticResource OverlayUnselectedBorder}"
+                      BorderBrush="Transparent"
+                      CornerRadius="8">
+                <Grid>
+                  <Image Source="{Binding Song.CoverPath}" Stretch="UniformToFill" />
+                  <Grid Margin="{StaticResource OverlayTextMargin}"
+                        VerticalAlignment="Bottom">
+                    <controls:OutlinedTextBlock x:Name="QueueOverlayCoverTitleText"
+                                                Text="{Binding Song.Metadata.Title}"
+                                                Fill="White"
+                                                Stroke="Black"
+                                                StrokeThickness="1"
+                                                FontSize="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemFontRatio}}"
+                                                TextWrapping="Wrap" 
+                                                FontWeight="Bold"/>
+                  </Grid>
+                </Grid>
+              </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+              <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                <Setter TargetName="CoverBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter TargetName="CoverBorder" Property="BorderThickness" Value="{StaticResource OverlaySelectedBorder}" />
+                <Setter TargetName="CoverBorder" Property="Effect">
+                  <Setter.Value>
+                    <DropShadowEffect Color="#37B24D" BlurRadius="18" ShadowDepth="0" Opacity="0.75" />
+                  </Setter.Value>
+                </Setter>
+              </DataTrigger>
+            </DataTemplate.Triggers>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+  </Grid>
+</Window>

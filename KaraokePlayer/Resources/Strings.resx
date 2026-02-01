@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Karaoke Player</value>
+  </data>
+  <data name="SongLibraryTitle" xml:space="preserve">
+    <value>Song Library</value>
+  </data>
+  <data name="ReloadLibraryButton" xml:space="preserve">
+    <value>Reload Library</value>
+  </data>
+  <data name="SkipToFirstNoteButton" xml:space="preserve">
+    <value>Skip To First Note</value>
+  </data>
+  <data name="SkipToFirstNotePrompt" xml:space="preserve">
+    <value>Press Enter to skip to first note</value>
+  </data>
+  <data name="VideoSurfacePlaceholder" xml:space="preserve">
+    <value>Video Surface</value>
+  </data>
+  <data name="LyricsOverlayPlaceholder" xml:space="preserve">
+    <value>Lyrics Overlay</value>
+  </data>
+  <data name="LoadingLabel" xml:space="preserve">
+    <value>Loading</value>
+  </data>
+  <data name="RemainingLabel" xml:space="preserve">
+    <value>Remaining:</value>
+  </data>
+  <data name="MainMenuTitle" xml:space="preserve">
+    <value>Main Menu</value>
+  </data>
+  <data name="StartQueueButton" xml:space="preserve">
+    <value>Enter Player</value>
+  </data>
+  <data name="OptionsButton" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="OptionsTitle" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>Loading songs...</value>
+  </data>
+  <data name="StatusLoaded" xml:space="preserve">
+    <value>Songs loaded.</value>
+  </data>
+  <data name="StatusMissing" xml:space="preserve">
+    <value>Songs folder not found.</value>
+  </data>
+  <data name="SelectedSongTitleLabel" xml:space="preserve">
+    <value>Selected Song</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="ArtistLabel" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="AudioLabel" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="VideoLabel" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="BpmLabel" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="CoverLabel" xml:space="preserve">
+    <value>Cover</value>
+  </data>
+  <data name="CoverPlaceholder" xml:space="preserve">
+    <value>No cover</value>
+  </data>
+  <data name="SongsFolderLabel" xml:space="preserve">
+    <value>Songs folder</value>
+  </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="SongsFolderDialogTitle" xml:space="preserve">
+    <value>Select songs folder</value>
+  </data>
+  <data name="EnterWindowedButton" xml:space="preserve">
+    <value>Windowed Mode</value>
+  </data>
+  <data name="EnterFullscreenButton" xml:space="preserve">
+    <value>Fullscreen Mode</value>
+  </data>
+  <data name="WindowModeLabel" xml:space="preserve">
+    <value>Window mode</value>
+  </data>
+  <data name="WindowModeBorderless" xml:space="preserve">
+    <value>Borderless fullscreen</value>
+  </data>
+  <data name="WindowModeWindowed" xml:space="preserve">
+    <value>Windowed</value>
+  </data>
+  <data name="ExitButton" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="QueueTitle" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="QueueEmptyMessage" xml:space="preserve">
+    <value>Queue is empty.</value>
+  </data>
+  <data name="StartKaraokeButton" xml:space="preserve">
+    <value>Start Karaoke</value>
+  </data>
+</root>

@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="KaraokeCore/KaraokeCore.csproj" />
   <Project Path="KaraokePlayer/KaraokePlayer.csproj" />
-  <Project Path="KaraokeQueueWeb/KaraokeQueueWeb.csproj" />
+  <Project Path="KaraokeCore.Tests/KaraokeCore.Tests.csproj" />
+  <Project Path="KaraokePlayer.Tests/KaraokePlayer.Tests.csproj" />
 </Solution>

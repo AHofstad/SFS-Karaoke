@@ -1,12 +1,73 @@
-﻿<Window x:Class="KaraokePlayer.MainWindow"
+<Window x:Class="KaraokePlayer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KaraokePlayer"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        xmlns:loc="clr-namespace:KaraokePlayer.Localization"
+        xmlns:presentation="clr-namespace:KaraokePlayer.Presentation"
+        xmlns:views="clr-namespace:KaraokePlayer.Views"
+        Title="{Binding [AppTitle], Source={x:Static loc:LocalizationService.Instance}}"
+        Height="720" Width="1280"
+        MinHeight="720" MinWidth="1280"
+        Background="#0E0E10">
+  <Window.InputBindings>
+    <KeyBinding Key="Enter" Command="{x:Static local:MainWindow.EnterActionCommand}" />
+    <KeyBinding Key="Left" Command="{x:Static local:MainWindow.PreviousSongCommand}" />
+    <KeyBinding Key="Right" Command="{x:Static local:MainWindow.NextSongCommand}" />
+    <KeyBinding Key="F11" Command="{x:Static local:MainWindow.ToggleWindowModeCommand}" />
+    <KeyBinding Key="Escape" Command="{x:Static local:MainWindow.BackCommand}" />
+  </Window.InputBindings>
 
-    </Grid>
+  <Window.CommandBindings>
+    <CommandBinding Command="{x:Static local:MainWindow.SkipToFirstNoteCommand}"
+                    Executed="SkipToFirstNote_Executed"
+                    CanExecute="SkipToFirstNote_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.EnterActionCommand}"
+                    Executed="EnterAction_Executed"
+                    CanExecute="EnterAction_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.PreviousSongCommand}"
+                    Executed="PreviousSong_Executed"
+                    CanExecute="PreviousSong_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.NextSongCommand}"
+                    Executed="NextSong_Executed"
+                    CanExecute="NextSong_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ToggleWindowModeCommand}"
+                    Executed="ToggleWindowMode_Executed" />
+    <CommandBinding Command="{x:Static local:MainWindow.BackCommand}"
+                    Executed="Back_Executed"
+                    CanExecute="Back_CanExecute" />
+  </Window.CommandBindings>
+
+  <Window.Resources>
+    <SolidColorBrush x:Key="PanelBrush" Color="#191A1E" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#37B24D" />
+    <SolidColorBrush x:Key="TextBrush" Color="#F1F3F5" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#ADB5BD" />
+    <GridLength x:Key="SidebarWidth">320</GridLength>
+    <sys:Double x:Key="OverlayWidth">240</sys:Double>
+    <sys:Double x:Key="OverlayHeight">64</sys:Double>
+    <CornerRadius x:Key="CornerRadius">10</CornerRadius>
+    <DataTemplate DataType="{x:Type presentation:MainMenuViewModel}">
+      <views:MainMenuView EnterPlayerRequested="MainMenuView_EnterPlayerRequested"
+                          OptionsRequested="MainMenuView_OptionsRequested"
+                          ExitRequested="MainMenuView_ExitRequested" />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type presentation:OptionsViewModel}">
+      <views:OptionsView CloseRequested="OptionsView_CloseRequested"
+                         BrowseRequested="OptionsView_BrowseRequested" />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type presentation:QueueViewModel}">
+      <views:QueueView StartKaraokeRequested="QueueView_StartKaraokeRequested" />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type presentation:GameViewModel}">
+      <views:GameView />
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid>
+    <ContentControl Content="{Binding CurrentView}" />
+  </Grid>
 </Window>

@@ -1,0 +1,125 @@
+<UserControl x:Class="KaraokePlayer.Views.QueueView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:loc="clr-namespace:KaraokePlayer.Localization"
+             xmlns:local="clr-namespace:KaraokePlayer"
+             xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+             xmlns:converters="clr-namespace:KaraokePlayer.Converters"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+    <sys:Double x:Key="QueueBaseWidth">1280</sys:Double>
+    <sys:Double x:Key="QueueBaseHeight">720</sys:Double>
+    <GridLength x:Key="QueueListWidth">3*</GridLength>
+    <GridLength x:Key="QueuePreviewWidth">7*</GridLength>
+    <sys:Double x:Key="QueueOverlayHeight">220</sys:Double>
+    <sys:Double x:Key="OverlayItemSize">90</sys:Double>
+    <sys:Double x:Key="OverlayItemFontSize">10</sys:Double>
+    <Thickness x:Key="OverlayItemMargin">6</Thickness>
+    <Thickness x:Key="OverlayTextMargin">6</Thickness>
+    <Thickness x:Key="OverlaySelectedBorder">3</Thickness>
+    <Thickness x:Key="OverlayUnselectedBorder">1</Thickness>
+  </UserControl.Resources>
+
+  <Viewbox x:Name="QueueViewbox" Stretch="Uniform" StretchDirection="Both">
+    <Grid Width="{StaticResource QueueBaseWidth}" Height="{StaticResource QueueBaseHeight}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="{StaticResource QueueListWidth}" />
+        <ColumnDefinition Width="{StaticResource QueuePreviewWidth}" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="{DynamicResource PanelBrush}">
+        <Grid Margin="16">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <TextBlock x:Name="QueueTitleText"
+                     Grid.Row="0"
+                     Text="{Binding [QueueTitle], Source={x:Static loc:LocalizationService.Instance}}"
+                     Foreground="{DynamicResource TextBrush}"
+                     FontSize="18"
+                     FontWeight="Bold" />
+
+          <Grid Grid.Row="1" Margin="0,12,0,12">
+            <ListBox x:Name="QueueList"
+                     ItemsSource="{Binding Queue}"
+                     SelectedItem="{Binding SelectedQueueItem}"
+                     Background="#121317"
+                     BorderThickness="0"
+                     Foreground="{DynamicResource TextBrush}"
+                     PreviewMouseLeftButtonDown="QueueList_PreviewMouseLeftButtonDown"
+                     MouseMove="QueueList_MouseMove"
+                     AllowDrop="True"
+                     Drop="QueueList_Drop">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                      <TextBlock x:Name="QueueItemTitleText" Text="{Binding Metadata.Title}" FontWeight="SemiBold" />
+                      <TextBlock x:Name="QueueItemArtistText" Text="{Binding Metadata.Artist}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                      <Button Content="Remove"
+                              MinWidth="64"
+                              Height="24"
+                              Click="QueueRemove_Click"
+                              CommandParameter="{Binding}" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock x:Name="QueueEmptyText"
+                       Text="{Binding [QueueEmptyMessage], Source={x:Static loc:LocalizationService.Instance}}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       FontSize="14"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       IsHitTestVisible="False">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Visibility" Value="Visible" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding ElementName=QueueList, Path=HasItems}" Value="True">
+                      <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </Grid>
+
+          <Button Grid.Row="2"
+                  Content="{Binding [StartKaraokeButton], Source={x:Static loc:LocalizationService.Instance}}"
+                  Height="36"
+                  Click="StartKaraoke_Click" />
+        </Grid>
+      </Border>
+
+      <Grid Grid.Column="1">
+        <Border x:Name="PreviewHost" Background="#0B0B0C" CornerRadius="{DynamicResource CornerRadius}" Margin="16">
+          <Grid>
+            <Image Source="{Binding SelectedSongBackgroundPath}"
+                   Stretch="UniformToFill"
+                   Visibility="{Binding ElementName=PreviewSurface, Path=IsVisible, Converter={StaticResource InverseBoolToVisibility}}" />
+            <vlc:VideoView x:Name="PreviewSurface" />
+            <!-- Overlay rendered in a separate window to avoid WPF airspace issues with VideoView -->
+          </Grid>
+        </Border>
+      </Grid>
+    </Grid>
+  </Viewbox>
+</UserControl>
