@@ -132,8 +132,10 @@ public partial class PlayerView : System.Windows.Controls.UserControl
     }
     else
     {
-      VideoSurface.MediaPlayer = null;
-      VideoSurface.Visibility = Visibility.Collapsed;
+      VideoSurface.MediaPlayer = _videoPlayer;
+      VideoSurface.Visibility = Visibility.Hidden;
+      _videoPlayer.Stop();
+      _videoPlayer.Media = null;
     }
 
     using var audioMedia = new LibVLCSharp.Shared.Media(_libVlc, audioPath, LibVLCSharp.Shared.FromType.FromPath);
@@ -141,6 +143,8 @@ public partial class PlayerView : System.Windows.Controls.UserControl
 
     if (hasVideo && !string.IsNullOrWhiteSpace(videoPath))
     {
+      _videoPlayer.Stop();
+      _videoPlayer.Media = null;
       using var videoMedia = new LibVLCSharp.Shared.Media(_libVlc, videoPath, LibVLCSharp.Shared.FromType.FromPath);
       _videoPlayer.Play(videoMedia);
       SyncVideoToAudio(_audioPlayer.Time);
@@ -148,12 +152,13 @@ public partial class PlayerView : System.Windows.Controls.UserControl
     else
     {
       _videoPlayer.Stop();
+      _videoPlayer.Media = null;
     }
   }
 
   private void AudioPlayer_TimeChanged(object? sender, LibVLCSharp.Shared.MediaPlayerTimeChangedEventArgs e)
   {
-    SyncVideoToAudio(e.Time);
+    Dispatcher.BeginInvoke(() => SyncVideoToAudio(e.Time));
   }
 
   private void SyncVideoToAudio(long audioTimeMs)
@@ -171,6 +176,7 @@ public partial class PlayerView : System.Windows.Controls.UserControl
     var videoTimeMs = audioTimeMs - _videoGapMs;
     if (videoTimeMs < 0)
     {
+      VideoSurface.Visibility = Visibility.Hidden;
       if (_videoPlayer.IsPlaying)
       {
         _videoPlayer.Pause();
@@ -179,6 +185,7 @@ public partial class PlayerView : System.Windows.Controls.UserControl
       return;
     }
 
+    VideoSurface.Visibility = Visibility.Visible;
     if (!_videoPlayer.IsPlaying)
     {
       _videoPlayer.Play();

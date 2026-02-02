@@ -16,6 +16,7 @@ public partial class GameView : System.Windows.Controls.UserControl
   private KaraokePlayer.Presentation.GameViewModel? _viewModel;
   private long _lastKnownTimeMs;
   private DateTime _lastTimeSyncUtc;
+  private bool _isScrubbing;
   private const long SkipMinimumLeadMs = 3000;
   private const long SkipOffsetMs = 2000;
   private const long MaxVideoDriftMs = 80;
@@ -71,6 +72,8 @@ public partial class GameView : System.Windows.Controls.UserControl
         DataContext = DataContext
       };
       _gameOverlay.Loaded += LyricsOverlay_Loaded;
+      _gameOverlay.ScrubStarted += GameOverlay_ScrubStarted;
+      _gameOverlay.ScrubCompleted += GameOverlay_ScrubCompleted;
       _gameOverlay.Show();
     }
 
@@ -126,6 +129,8 @@ public partial class GameView : System.Windows.Controls.UserControl
     if (_gameOverlay is not null)
     {
       _gameOverlay.Loaded -= LyricsOverlay_Loaded;
+      _gameOverlay.ScrubStarted -= GameOverlay_ScrubStarted;
+      _gameOverlay.ScrubCompleted -= GameOverlay_ScrubCompleted;
       _gameOverlay.Close();
       _gameOverlay = null;
     }
@@ -183,8 +188,10 @@ public partial class GameView : System.Windows.Controls.UserControl
     }
     else
     {
-      GameSurface.MediaPlayer = null;
-      GameSurface.Visibility = Visibility.Collapsed;
+      GameSurface.MediaPlayer = _videoPlayer;
+      GameSurface.Visibility = Visibility.Hidden;
+      _videoPlayer.Stop();
+      _videoPlayer.Media = null;
     }
 
     using var audioMedia = new LibVLCSharp.Shared.Media(_libVlc, audioPath, LibVLCSharp.Shared.FromType.FromPath);
@@ -192,6 +199,8 @@ public partial class GameView : System.Windows.Controls.UserControl
 
     if (hasVideo && !string.IsNullOrWhiteSpace(videoPath))
     {
+      _videoPlayer.Stop();
+      _videoPlayer.Media = null;
       using var videoMedia = new LibVLCSharp.Shared.Media(_libVlc, videoPath, LibVLCSharp.Shared.FromType.FromPath);
       _videoPlayer.Play(videoMedia);
       SyncVideoToAudio(_audioPlayer.Time);
@@ -199,6 +208,7 @@ public partial class GameView : System.Windows.Controls.UserControl
     else
     {
       _videoPlayer.Stop();
+      _videoPlayer.Media = null;
     }
   }
 
@@ -207,13 +217,16 @@ public partial class GameView : System.Windows.Controls.UserControl
     var currentMs = e.Time;
     _lastKnownTimeMs = currentMs;
     _lastTimeSyncUtc = DateTime.UtcNow;
-    SyncVideoToAudio(currentMs);
     Dispatcher.BeginInvoke(() =>
     {
+      SyncVideoToAudio(currentMs);
       if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
       {
         viewModel.UpdateLyricDisplay(currentMs);
-        viewModel.UpdatePlaybackProgress(currentMs, _audioPlayer?.Length ?? 0);
+        if (!_isScrubbing)
+        {
+          viewModel.UpdatePlaybackProgress(currentMs, _audioPlayer?.Length ?? 0);
+        }
       }
     });
   }
@@ -369,7 +382,42 @@ public partial class GameView : System.Windows.Controls.UserControl
     if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
     {
       viewModel.UpdateLyricDisplay(estimatedMs);
-      viewModel.UpdatePlaybackProgress(estimatedMs, _audioPlayer.Length);
+      if (!_isScrubbing)
+      {
+        viewModel.UpdatePlaybackProgress(estimatedMs, _audioPlayer.Length);
+      }
+    }
+  }
+
+  private void GameOverlay_ScrubStarted(object? sender, EventArgs e)
+  {
+    _isScrubbing = true;
+  }
+
+  private void GameOverlay_ScrubCompleted(object? sender, double progressPercent)
+  {
+    _isScrubbing = false;
+    if (_audioPlayer is null)
+    {
+      return;
+    }
+
+    var durationMs = _audioPlayer.Length;
+    if (durationMs <= 0)
+    {
+      return;
+    }
+
+    var targetMs = (long)(durationMs * (progressPercent / 100d));
+    _audioPlayer.Time = targetMs;
+    _lastKnownTimeMs = targetMs;
+    _lastTimeSyncUtc = DateTime.UtcNow;
+    SyncVideoToAudio(targetMs);
+
+    if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      viewModel.UpdateLyricDisplay(targetMs);
+      viewModel.UpdatePlaybackProgress(targetMs, durationMs);
     }
   }
 
@@ -388,6 +436,7 @@ public partial class GameView : System.Windows.Controls.UserControl
     var videoTimeMs = audioTimeMs - _videoGapMs;
     if (videoTimeMs < 0)
     {
+      GameSurface.Visibility = Visibility.Hidden;
       if (_videoPlayer.IsPlaying)
       {
         _videoPlayer.Pause();
@@ -396,6 +445,7 @@ public partial class GameView : System.Windows.Controls.UserControl
       return;
     }
 
+    GameSurface.Visibility = Visibility.Visible;
     if (!_videoPlayer.IsPlaying)
     {
       _videoPlayer.Play();

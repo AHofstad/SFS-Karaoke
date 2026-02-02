@@ -87,6 +87,16 @@
                        Foreground="{StaticResource GameProgressFillBrush}"
                        VerticalAlignment="Center"
                        Style="{StaticResource RoundedProgressBar}" />
+          <Slider x:Name="GameScrubSlider"
+                  Height="{StaticResource GameOverlayProgressHeight}"
+                  Minimum="0"
+                  Maximum="100"
+                  Value="{Binding RemainingProgress, Mode=OneWay}"
+                  Opacity="0.01"
+                  IsMoveToPointEnabled="True"
+                  VerticalAlignment="Center"
+                  PreviewMouseLeftButtonDown="GameScrubSlider_PreviewMouseLeftButtonDown"
+                  PreviewMouseLeftButtonUp="GameScrubSlider_PreviewMouseLeftButtonUp" />
           <controls:OutlinedTextBlock x:Name="GameElapsedTimeText"
                                       Grid.Column="1"
                                       Text="{Binding ElapsedTime}"

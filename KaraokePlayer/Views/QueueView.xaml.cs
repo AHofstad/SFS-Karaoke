@@ -425,8 +425,10 @@ public partial class QueueView : System.Windows.Controls.UserControl
     }
     else
     {
-      PreviewSurface.MediaPlayer = null;
-      PreviewSurface.Visibility = Visibility.Collapsed;
+      PreviewSurface.MediaPlayer = _videoPlayer;
+      PreviewSurface.Visibility = Visibility.Hidden;
+      _videoPlayer.Stop();
+      _videoPlayer.Media = null;
     }
 
     using var audioMedia = new LibVLCSharp.Shared.Media(_libVlc, audioPath, LibVLCSharp.Shared.FromType.FromPath);
@@ -434,6 +436,8 @@ public partial class QueueView : System.Windows.Controls.UserControl
 
     if (hasVideo && !string.IsNullOrWhiteSpace(videoPath))
     {
+      _videoPlayer?.Stop();
+      _videoPlayer!.Media = null;
       using var videoMedia = new LibVLCSharp.Shared.Media(_libVlc, videoPath, LibVLCSharp.Shared.FromType.FromPath);
       _videoPlayer?.Play(videoMedia);
       SyncVideoToAudio(_audioPlayer?.Time ?? 0);
@@ -441,12 +445,16 @@ public partial class QueueView : System.Windows.Controls.UserControl
     else
     {
       _videoPlayer?.Stop();
+      if (_videoPlayer is not null)
+      {
+        _videoPlayer.Media = null;
+      }
     }
   }
 
   private void AudioPlayer_TimeChanged(object? sender, LibVLCSharp.Shared.MediaPlayerTimeChangedEventArgs e)
   {
-    SyncVideoToAudio(e.Time);
+    Dispatcher.BeginInvoke(() => SyncVideoToAudio(e.Time));
   }
 
   private void SyncVideoToAudio(long audioTimeMs)
@@ -464,6 +472,7 @@ public partial class QueueView : System.Windows.Controls.UserControl
     var videoTimeMs = audioTimeMs - _videoGapMs;
     if (videoTimeMs < 0)
     {
+      PreviewSurface.Visibility = Visibility.Hidden;
       if (_videoPlayer.IsPlaying)
       {
         _videoPlayer.Pause();
@@ -472,6 +481,7 @@ public partial class QueueView : System.Windows.Controls.UserControl
       return;
     }
 
+    PreviewSurface.Visibility = Visibility.Visible;
     if (!_videoPlayer.IsPlaying)
     {
       _videoPlayer.Play();
