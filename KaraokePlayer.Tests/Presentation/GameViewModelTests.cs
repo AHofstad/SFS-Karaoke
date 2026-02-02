@@ -42,6 +42,28 @@ public class GameViewModelTests
   }
 
   [Test]
+  public void UpdatePlaybackProgress_WithDifferentDurations_UsesProvidedDuration()
+  {
+    // arrange
+    const double currentMs = 30000;
+    const long shorterDurationMs = 60000;
+    const long longerDurationMs = 120000;
+    const double expectedShorterProgress = 50;
+    const double expectedLongerProgress = 25;
+    var viewModel = new GameViewModel(new MainViewModel());
+
+    // act
+    viewModel.UpdatePlaybackProgress(currentMs, shorterDurationMs);
+    var shorterProgress = viewModel.RemainingProgress;
+    viewModel.UpdatePlaybackProgress(currentMs, longerDurationMs);
+    var longerProgress = viewModel.RemainingProgress;
+
+    // assert
+    Assert.That(shorterProgress, Is.EqualTo(expectedShorterProgress));
+    Assert.That(longerProgress, Is.EqualTo(expectedLongerProgress));
+  }
+
+  [Test]
   public void PrepareLyrics_WithNotes_SetsFirstNoteStartMs()
   {
     // arrange
