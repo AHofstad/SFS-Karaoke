@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Karaoke Queue</title>
     <style>
+      html,
       body {
         margin: 0;
+        height: 100%;
+        overflow: hidden;
         font-family: "Segoe UI", sans-serif;
         background: #0b0b0c;
         color: #e9ecef;
@@ -16,15 +19,42 @@
         grid-template-columns: 1fr 320px;
         gap: 24px;
         padding: 24px;
+        height: 100vh;
+        box-sizing: border-box;
       }
       .panel {
         background: #121317;
         border-radius: 12px;
         padding: 16px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
       .panel h2 {
         margin: 0 0 12px 0;
         font-size: 20px;
+      }
+      .search {
+        width: 100%;
+        border: 1px solid #2a2d35;
+        background: #0f1116;
+        color: #e9ecef;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 14px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+      }
+      .search:focus {
+        outline: none;
+        border-color: #3b77c1;
+        box-shadow: 0 0 0 2px rgba(59, 119, 193, 0.25);
+      }
+      .scroll-area {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        padding-right: 4px;
       }
       .song-list,
       .queue-list {
@@ -72,24 +102,45 @@
     <div class="layout">
       <section class="panel">
         <h2>Library</h2>
-        <div id="libraryList" class="song-list"></div>
+        <input id="librarySearch" class="search" type="text" placeholder="Search songs or creators..." />
+        <div class="scroll-area">
+          <div id="libraryList" class="song-list"></div>
+        </div>
       </section>
       <section class="panel">
         <h2>Queue</h2>
-        <div id="queueList" class="queue-list"></div>
-        <div id="queueEmpty" class="empty" style="display:none;">Queue is empty.</div>
+        <div class="scroll-area">
+          <div id="queueList" class="queue-list"></div>
+          <div id="queueEmpty" class="empty" style="display:none;">Queue is empty.</div>
+        </div>
       </section>
     </div>
 
     <script>
       const libraryList = document.getElementById("libraryList");
+      const librarySearch = document.getElementById("librarySearch");
       const queueList = document.getElementById("queueList");
       const queueEmpty = document.getElementById("queueEmpty");
+      let libraryItems = [];
 
       async function loadLibrary() {
         const response = await fetch("/api/library");
         if (!response.ok) return;
-        const items = await response.json();
+        libraryItems = await response.json();
+        renderLibrary();
+      }
+
+      function renderLibrary() {
+        const query = librarySearch.value.trim().toLowerCase();
+        const items = libraryItems
+          .filter(item => {
+            if (!query) return true;
+            return (
+              (item.title || "").toLowerCase().includes(query) ||
+              (item.artist || "").toLowerCase().includes(query)
+            );
+          })
+          .sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" }));
         libraryList.innerHTML = "";
         items.forEach(item => {
           const row = document.createElement("div");
@@ -138,6 +189,7 @@
         await loadQueue();
       }
 
+      librarySearch.addEventListener("input", renderLibrary);
       loadLibrary();
       loadQueue();
       setInterval(loadQueue, 2000);
