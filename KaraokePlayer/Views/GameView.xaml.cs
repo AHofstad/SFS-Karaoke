@@ -7,7 +7,9 @@ namespace KaraokePlayer.Views;
 public partial class GameView : System.Windows.Controls.UserControl
 {
   private LibVLCSharp.Shared.LibVLC? _libVlc;
-  private LibVLCSharp.Shared.MediaPlayer? _mediaPlayer;
+  private LibVLCSharp.Shared.MediaPlayer? _audioPlayer;
+  private LibVLCSharp.Shared.MediaPlayer? _videoPlayer;
+  private int _videoGapMs;
   private DispatcherTimer? _lyricTimer;
   private Window? _hostWindow;
   private GameOverlayWindow? _gameOverlay;
@@ -16,6 +18,7 @@ public partial class GameView : System.Windows.Controls.UserControl
   private DateTime _lastTimeSyncUtc;
   private const long SkipMinimumLeadMs = 3000;
   private const long SkipOffsetMs = 2000;
+  private const long MaxVideoDriftMs = 80;
 
   public GameView()
   {
@@ -33,8 +36,12 @@ public partial class GameView : System.Windows.Controls.UserControl
     }
 
     _libVlc = new LibVLCSharp.Shared.LibVLC();
-    _mediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
-    GameSurface.MediaPlayer = _mediaPlayer;
+    _audioPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
+    _videoPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc)
+    {
+      Mute = true
+    };
+    GameSurface.MediaPlayer = _videoPlayer;
 
     if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
     {
@@ -49,10 +56,10 @@ public partial class GameView : System.Windows.Controls.UserControl
       viewModel.UpdateLyricDisplay(0);
     }
 
-    if (_mediaPlayer is not null)
+    if (_audioPlayer is not null)
     {
-      _mediaPlayer.TimeChanged += MediaPlayer_TimeChanged;
-      _mediaPlayer.EndReached += MediaPlayer_EndReached;
+      _audioPlayer.TimeChanged += MediaPlayer_TimeChanged;
+      _audioPlayer.EndReached += MediaPlayer_EndReached;
     }
 
     _hostWindow = Window.GetWindow(this);
@@ -87,15 +94,17 @@ public partial class GameView : System.Windows.Controls.UserControl
   private void OnUnloaded(object sender, RoutedEventArgs e)
   {
     GameSurface.MediaPlayer = null;
-    var mediaPlayer = _mediaPlayer;
+    var audioPlayer = _audioPlayer;
+    var videoPlayer = _videoPlayer;
     var libVlc = _libVlc;
-    _mediaPlayer = null;
+    _audioPlayer = null;
+    _videoPlayer = null;
     _libVlc = null;
 
-    if (mediaPlayer is not null)
+    if (audioPlayer is not null)
     {
-      mediaPlayer.TimeChanged -= MediaPlayer_TimeChanged;
-      mediaPlayer.EndReached -= MediaPlayer_EndReached;
+      audioPlayer.TimeChanged -= MediaPlayer_TimeChanged;
+      audioPlayer.EndReached -= MediaPlayer_EndReached;
     }
 
     if (_lyricTimer is not null)
@@ -131,32 +140,37 @@ public partial class GameView : System.Windows.Controls.UserControl
     }
     _viewModel = null;
 
-    if (mediaPlayer is null && libVlc is null)
+    if (audioPlayer is null && videoPlayer is null && libVlc is null)
     {
       return;
     }
 
     _ = Task.Run(() =>
     {
-      mediaPlayer?.Stop();
-      mediaPlayer?.Dispose();
+      audioPlayer?.Stop();
+      audioPlayer?.Dispose();
+      videoPlayer?.Stop();
+      videoPlayer?.Dispose();
       libVlc?.Dispose();
     });
   }
 
   private void PlaySong(KaraokePlayer.Presentation.GameViewModel viewModel)
   {
-    if (_mediaPlayer is null || _libVlc is null)
+    if (_audioPlayer is null || _videoPlayer is null || _libVlc is null)
     {
       return;
     }
 
     var song = viewModel.CurrentSong;
+    _videoGapMs = song?.Metadata?.VideoGapMs ?? 0;
+    var audioPath = song?.AudioPath;
     var hasVideo = !string.IsNullOrWhiteSpace(song?.VideoPath);
-    var path = hasVideo ? song?.VideoPath : song?.AudioPath;
-    if (string.IsNullOrWhiteSpace(path))
+    var videoPath = song?.VideoPath;
+    if (string.IsNullOrWhiteSpace(audioPath))
     {
-      _mediaPlayer.Stop();
+      _audioPlayer.Stop();
+      _videoPlayer.Stop();
       GameSurface.MediaPlayer = null;
       GameSurface.Visibility = Visibility.Collapsed;
       return;
@@ -164,10 +178,7 @@ public partial class GameView : System.Windows.Controls.UserControl
 
     if (hasVideo)
     {
-      if (GameSurface.MediaPlayer is null)
-      {
-        GameSurface.MediaPlayer = _mediaPlayer;
-      }
+      GameSurface.MediaPlayer = _videoPlayer;
       GameSurface.Visibility = Visibility.Visible;
     }
     else
@@ -176,13 +187,19 @@ public partial class GameView : System.Windows.Controls.UserControl
       GameSurface.Visibility = Visibility.Collapsed;
     }
 
-    using var media = new LibVLCSharp.Shared.Media(_libVlc, path, LibVLCSharp.Shared.FromType.FromPath);
-    if (hasVideo && !string.IsNullOrWhiteSpace(song?.AudioPath))
+    using var audioMedia = new LibVLCSharp.Shared.Media(_libVlc, audioPath, LibVLCSharp.Shared.FromType.FromPath);
+    _audioPlayer.Play(audioMedia);
+
+    if (hasVideo && !string.IsNullOrWhiteSpace(videoPath))
     {
-      var audioMrl = new Uri(song.AudioPath).AbsoluteUri;
-      media.AddOption($":input-slave={audioMrl}");
+      using var videoMedia = new LibVLCSharp.Shared.Media(_libVlc, videoPath, LibVLCSharp.Shared.FromType.FromPath);
+      _videoPlayer.Play(videoMedia);
+      SyncVideoToAudio(_audioPlayer.Time);
     }
-    _mediaPlayer.Play(media);
+    else
+    {
+      _videoPlayer.Stop();
+    }
   }
 
   private void MediaPlayer_TimeChanged(object? sender, LibVLCSharp.Shared.MediaPlayerTimeChangedEventArgs e)
@@ -190,12 +207,13 @@ public partial class GameView : System.Windows.Controls.UserControl
     var currentMs = e.Time;
     _lastKnownTimeMs = currentMs;
     _lastTimeSyncUtc = DateTime.UtcNow;
+    SyncVideoToAudio(currentMs);
     Dispatcher.BeginInvoke(() =>
     {
       if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
       {
         viewModel.UpdateLyricDisplay(currentMs);
-        viewModel.UpdatePlaybackProgress(currentMs, _mediaPlayer?.Length ?? 0);
+        viewModel.UpdatePlaybackProgress(currentMs, _audioPlayer?.Length ?? 0);
       }
     });
   }
@@ -242,7 +260,7 @@ public partial class GameView : System.Windows.Controls.UserControl
 
   private void ViewModel_SkipToFirstNoteRequested(object? sender, EventArgs e)
   {
-    if (_mediaPlayer is null)
+    if (_audioPlayer is null)
     {
       return;
     }
@@ -258,7 +276,7 @@ public partial class GameView : System.Windows.Controls.UserControl
       return;
     }
 
-    var currentMs = _mediaPlayer.Time;
+    var currentMs = _audioPlayer.Time;
     var leadMs = (long)firstNoteMs.Value - currentMs;
     if (leadMs <= SkipMinimumLeadMs)
     {
@@ -266,11 +284,11 @@ public partial class GameView : System.Windows.Controls.UserControl
     }
 
     var targetMs = Math.Max(0, (long)firstNoteMs.Value - SkipOffsetMs);
-    _mediaPlayer.Time = targetMs;
+    _audioPlayer.Time = targetMs;
     _lastKnownTimeMs = targetMs;
     _lastTimeSyncUtc = DateTime.UtcNow;
     viewModel.UpdateLyricDisplay(targetMs);
-    viewModel.UpdatePlaybackProgress(targetMs, _mediaPlayer.Length);
+    viewModel.UpdatePlaybackProgress(targetMs, _audioPlayer.Length);
   }
 
   private void LyricsOverlay_Loaded(object? sender, RoutedEventArgs e)
@@ -338,20 +356,55 @@ public partial class GameView : System.Windows.Controls.UserControl
 
   private void LyricTimer_Tick(object? sender, EventArgs e)
   {
-    if (_mediaPlayer is null)
+    if (_audioPlayer is null)
     {
       return;
     }
 
     var nowUtc = DateTime.UtcNow;
-    var baseTimeMs = _lastKnownTimeMs == 0 ? _mediaPlayer.Time : _lastKnownTimeMs;
+    var baseTimeMs = _lastKnownTimeMs == 0 ? _audioPlayer.Time : _lastKnownTimeMs;
     var elapsedMs = (nowUtc - _lastTimeSyncUtc).TotalMilliseconds;
     var estimatedMs = baseTimeMs + elapsedMs;
 
     if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
     {
       viewModel.UpdateLyricDisplay(estimatedMs);
-      viewModel.UpdatePlaybackProgress(estimatedMs, _mediaPlayer.Length);
+      viewModel.UpdatePlaybackProgress(estimatedMs, _audioPlayer.Length);
+    }
+  }
+
+  private void SyncVideoToAudio(long audioTimeMs)
+  {
+    if (_videoPlayer is null)
+    {
+      return;
+    }
+
+    if (_videoPlayer.Media is null)
+    {
+      return;
+    }
+
+    var videoTimeMs = audioTimeMs - _videoGapMs;
+    if (videoTimeMs < 0)
+    {
+      if (_videoPlayer.IsPlaying)
+      {
+        _videoPlayer.Pause();
+      }
+      _videoPlayer.Time = 0;
+      return;
+    }
+
+    if (!_videoPlayer.IsPlaying)
+    {
+      _videoPlayer.Play();
+    }
+
+    var drift = Math.Abs(_videoPlayer.Time - videoTimeMs);
+    if (drift > MaxVideoDriftMs)
+    {
+      _videoPlayer.Time = videoTimeMs;
     }
   }
 }
