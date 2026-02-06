@@ -189,6 +189,17 @@ public sealed class GameViewModel : INotifyPropertyChanged
       index = 0;
     }
 
+    if (index >= _lyrics.Count)
+    {
+      index = _lyrics.Count - 1;
+    }
+
+    // Keep index valid when playback seeks backward.
+    while (index > 0 && currentMs < _lyrics[index - 1].EndMs)
+    {
+      index--;
+    }
+
     while (index < _lyrics.Count && currentMs >= _lyrics[index].EndMs)
     {
       index++;

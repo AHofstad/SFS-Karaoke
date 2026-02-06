@@ -134,4 +134,32 @@ public class GameViewModelTests
     // assert
     Assert.That(viewModel.IsSkipPromptVisible, Is.False);
   }
+
+  [Test]
+  public void UpdateLyricDisplay_AfterSeekingBackward_RewindsToEarlierLine()
+  {
+    // arrange
+    const string basePath = @"c:\app";
+    const string songFolder = @"c:\app\songs\SongA";
+    const string songTxt = "#TITLE:Song A\n#BPM:60\n#GAP:0\n: 0 4 0 one\n- 4\n: 4 4 0 two\n- 8\nE";
+    var fileSystemMock = new System.IO.Abstractions.TestingHelpers.MockFileSystem(new Dictionary<string, System.IO.Abstractions.TestingHelpers.MockFileData>
+    {
+      { $@"{songFolder}\song.txt", new System.IO.Abstractions.TestingHelpers.MockFileData(songTxt) },
+    });
+    var settingsService = new KaraokePlayer.Configuration.SettingsService(basePath, fileSystemMock);
+    var mainViewModel = new MainViewModel(basePath, fileSystemMock, settingsService);
+    var viewModel = new GameViewModel(mainViewModel);
+    var entry = new KaraokeCore.Library.SongEntry(songFolder, $@"{songFolder}\song.txt", new KaraokeCore.Models.SongMetadata(new Dictionary<string, string>()), $@"{songFolder}\song.mp3", null, null, null);
+    viewModel.PrepareLyrics(entry, fileSystemMock);
+
+    // act
+    viewModel.UpdateLyricDisplay(1200);
+    var lineAfterForward = viewModel.CurrentLyricLineText;
+    viewModel.UpdateLyricDisplay(200);
+    var lineAfterBackward = viewModel.CurrentLyricLineText;
+
+    // assert
+    Assert.That(lineAfterForward, Is.EqualTo("two"));
+    Assert.That(lineAfterBackward, Is.EqualTo("one"));
+  }
 }
