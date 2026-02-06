@@ -67,7 +67,11 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Grid Width="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemSizeRatio}}"
-                  Height="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemSizeRatio}}">
+                  Height="{Binding ElementName=BottomBar, Path=ActualHeight, Converter={StaticResource MultiplyConverter}, ConverterParameter={StaticResource OverlayItemSizeRatio}}"
+                  RenderTransformOrigin="0.5,0.5">
+              <Grid.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+              </Grid.RenderTransform>
               <Border x:Name="CoverBorder"
                       Background="#111216"
                       BorderThickness="{StaticResource OverlayUnselectedBorder}"
@@ -91,11 +95,19 @@
             </Grid>
             <DataTemplate.Triggers>
               <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                <Setter TargetName="CoverBorder" Property="Margin" Value="0,-6,0,-6" />
                 <Setter TargetName="CoverBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 <Setter TargetName="CoverBorder" Property="BorderThickness" Value="{StaticResource OverlaySelectedBorder}" />
                 <Setter TargetName="CoverBorder" Property="Effect">
                   <Setter.Value>
                     <DropShadowEffect Color="#37B24D" BlurRadius="18" ShadowDepth="0" Opacity="0.75" />
+                  </Setter.Value>
+                </Setter>
+                <Setter TargetName="CoverBorder" Property="Panel.ZIndex" Value="10" />
+                <Setter TargetName="CoverBorder" Property="RenderTransformOrigin" Value="0.5,0.5" />
+                <Setter TargetName="CoverBorder" Property="RenderTransform">
+                  <Setter.Value>
+                    <ScaleTransform ScaleX="1.12" ScaleY="1.12" />
                   </Setter.Value>
                 </Setter>
               </DataTrigger>
