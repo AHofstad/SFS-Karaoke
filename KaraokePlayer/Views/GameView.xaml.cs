@@ -88,7 +88,7 @@ public partial class GameView : System.Windows.Controls.UserControl
 
     _lyricTimer = new DispatcherTimer
     {
-      Interval = TimeSpan.FromMilliseconds(10)
+      Interval = TimeSpan.FromMilliseconds(33)
     };
     _lyricTimer.Tick += LyricTimer_Tick;
     _lyricTimer.Start();
@@ -243,7 +243,6 @@ public partial class GameView : System.Windows.Controls.UserControl
       SyncVideoToAudio(currentMs);
       if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
       {
-        viewModel.UpdateLyricDisplay(currentMs);
         if (!_isScrubbing)
         {
           viewModel.UpdatePlaybackProgress(currentMs, _audioPlayer?.Length ?? 0);
@@ -426,7 +425,7 @@ public partial class GameView : System.Windows.Controls.UserControl
 
   private void LyricTimer_Tick(object? sender, EventArgs e)
   {
-    if (_audioPlayer is null)
+    if (_audioPlayer is null || _isNextSongDelayPending)
     {
       return;
     }

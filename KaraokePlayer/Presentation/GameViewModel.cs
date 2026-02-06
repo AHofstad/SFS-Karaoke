@@ -29,6 +29,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
   private double? _firstNoteStartMs;
   private List<LyricLine> _lyrics = new();
   private int _currentLineIndex = -1;
+  private int _renderedTokenLineIndex = -1;
+  private int _lastActiveTokenIndex = int.MinValue;
 
   public GameViewModel(MainViewModel root)
   {
@@ -155,6 +157,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
       NextLyricLineText = string.Empty;
       CurrentLyricTokens = Array.Empty<LyricTokenView>();
       _currentLineIndex = -1;
+      _renderedTokenLineIndex = -1;
+      _lastActiveTokenIndex = int.MinValue;
       return;
     }
 
@@ -164,6 +168,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
       CurrentLyricLineText = string.Empty;
       NextLyricLineText = string.Empty;
       CurrentLyricTokens = Array.Empty<LyricTokenView>();
+      _renderedTokenLineIndex = -1;
+      _lastActiveTokenIndex = int.MinValue;
       return;
     }
 
@@ -172,7 +178,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
       _currentLineIndex = -1;
       CurrentLyricLineText = _lyrics[0].Text;
       NextLyricLineText = _lyrics.Count > 1 ? _lyrics[1].Text : string.Empty;
-      CurrentLyricTokens = CreateTokenViews(_lyrics[0], currentMs);
+      var previewActiveIndex = FindActiveTokenIndex(_lyrics[0].Tokens, currentMs + _highlightOffsetMs);
+      UpdateCurrentTokens(0, _lyrics[0], previewActiveIndex);
       return;
     }
 
@@ -193,13 +200,20 @@ public sealed class GameViewModel : INotifyPropertyChanged
       CurrentLyricLineText = string.Empty;
       NextLyricLineText = string.Empty;
       CurrentLyricTokens = Array.Empty<LyricTokenView>();
+      _renderedTokenLineIndex = -1;
+      _lastActiveTokenIndex = int.MinValue;
       return;
     }
 
-    _currentLineIndex = index;
-    CurrentLyricLineText = _lyrics[index].Text;
-    NextLyricLineText = index + 1 < _lyrics.Count ? _lyrics[index + 1].Text : string.Empty;
-    CurrentLyricTokens = CreateTokenViews(_lyrics[index], currentMs);
+    if (_currentLineIndex != index)
+    {
+      _currentLineIndex = index;
+      CurrentLyricLineText = _lyrics[index].Text;
+      NextLyricLineText = index + 1 < _lyrics.Count ? _lyrics[index + 1].Text : string.Empty;
+    }
+
+    var activeIndex = FindActiveTokenIndex(_lyrics[index].Tokens, currentMs + _highlightOffsetMs);
+    UpdateCurrentTokens(index, _lyrics[index], activeIndex);
   }
 
   public void UpdatePlaybackProgress(double currentMs, long totalMs)
@@ -288,6 +302,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
   {
     _lyrics = new List<LyricLine>();
     _currentLineIndex = -1;
+    _renderedTokenLineIndex = -1;
+    _lastActiveTokenIndex = int.MinValue;
     CurrentLyricLineText = string.Empty;
     NextLyricLineText = string.Empty;
     CurrentLyricTokens = Array.Empty<LyricTokenView>();
@@ -295,14 +311,25 @@ public sealed class GameViewModel : INotifyPropertyChanged
     IsSkipPromptVisible = false;
   }
 
-  private static IReadOnlyList<LyricTokenView> CreateTokenViews(LyricLine line, double currentMs)
+  private void UpdateCurrentTokens(int lineIndex, LyricLine line, int activeIndex)
+  {
+    if (_renderedTokenLineIndex == lineIndex && _lastActiveTokenIndex == activeIndex)
+    {
+      return;
+    }
+
+    _renderedTokenLineIndex = lineIndex;
+    _lastActiveTokenIndex = activeIndex;
+    CurrentLyricTokens = CreateTokenViews(line, activeIndex);
+  }
+
+  private static IReadOnlyList<LyricTokenView> CreateTokenViews(LyricLine line, int activeIndex)
   {
     if (line.Tokens.Count == 0)
     {
       return Array.Empty<LyricTokenView>();
     }
 
-    var activeIndex = FindActiveTokenIndex(line.Tokens, currentMs + _highlightOffsetMs);
     var tokens = new List<LyricTokenView>(line.Tokens.Count);
     for (var i = 0; i < line.Tokens.Count; i++)
     {
