@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "KaraokePlayer/KaraokePlayer.csproj"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "KaraokeCore.Tests/KaraokeCore.Tests.csproj"
+      ],
+      "group": "test",
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "test KaraokePlayer",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "KaraokePlayer.Tests/KaraokePlayer.Tests.csproj"
+      ],
+      "group": "test",
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "build KaraokeCore",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "KaraokeCore/KaraokeCore.csproj"
+      ],
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "run KaraokePlayer",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "KaraokePlayer/KaraokePlayer.csproj"
+      ],
+      "problemMatcher": ["$msCompile"]
+    }
+  ]
+}
