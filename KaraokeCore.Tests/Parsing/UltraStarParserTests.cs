@@ -484,4 +484,74 @@ public class UltraStarParserTests
     Assert.That(malformedNote.Pitch, Is.EqualTo(defaultPitch));
     Assert.That(malformedNote.Text, Is.EqualTo(string.Empty));
   }
+
+  [Test]
+  public void ParseFromFile_Windows1252CurlyApostrophe_DecodesSuccessfully()
+  {
+    // Arrange
+    var parser = new UltraStarParser();
+    var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.txt");
+    var content = "#TITLE:Song\r\n#BPM:120\r\n#GAP:0\r\n: 0 4 0 I\u2019ll\r\nE\r\n";
+    var bytes = EncodeWindows1252(content);
+
+    try
+    {
+      File.WriteAllBytes(tempPath, bytes);
+
+      // Act
+      var song = parser.ParseFromFile(tempPath);
+
+      // Assert
+      var note = song.Events.OfType<NoteEvent>().First();
+      Assert.That(note.Text, Is.EqualTo("I\u2019ll"));
+    }
+    finally
+    {
+      if (File.Exists(tempPath))
+      {
+        File.Delete(tempPath);
+      }
+    }
+  }
+
+  private static byte[] EncodeWindows1252(string text)
+  {
+    var bytes = new byte[text.Length];
+    for (var i = 0; i < text.Length; i++)
+    {
+      bytes[i] = text[i] switch
+      {
+        '\u20AC' => 0x80,
+        '\u201A' => 0x82,
+        '\u0192' => 0x83,
+        '\u201E' => 0x84,
+        '\u2026' => 0x85,
+        '\u2020' => 0x86,
+        '\u2021' => 0x87,
+        '\u02C6' => 0x88,
+        '\u2030' => 0x89,
+        '\u0160' => 0x8A,
+        '\u2039' => 0x8B,
+        '\u0152' => 0x8C,
+        '\u017D' => 0x8E,
+        '\u2018' => 0x91,
+        '\u2019' => 0x92,
+        '\u201C' => 0x93,
+        '\u201D' => 0x94,
+        '\u2022' => 0x95,
+        '\u2013' => 0x96,
+        '\u2014' => 0x97,
+        '\u02DC' => 0x98,
+        '\u2122' => 0x99,
+        '\u0161' => 0x9A,
+        '\u203A' => 0x9B,
+        '\u0153' => 0x9C,
+        '\u017E' => 0x9E,
+        '\u0178' => 0x9F,
+        _ => text[i] <= (char)0xFF ? (byte)text[i] : (byte)'?'
+      };
+    }
+
+    return bytes;
+  }
 }

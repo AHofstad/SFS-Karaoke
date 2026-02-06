@@ -86,6 +86,13 @@ public static class LyricLineBuilder
       return string.Empty;
     }
 
-    return text == "~" ? string.Empty : text;
+    if (text == "~")
+    {
+      return string.Empty;
+    }
+
+    return text
+      .Replace('\u2019', '\'')
+      .Replace('\u2018', '\'');
   }
 }

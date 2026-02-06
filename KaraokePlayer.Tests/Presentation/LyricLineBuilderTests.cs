@@ -116,4 +116,29 @@ public class LyricLineBuilderTests
     Assert.That(result[0].Text, Is.EqualTo("Don 't look"));
     Assert.That(result[0].Tokens.Count, Is.EqualTo(3));
   }
+
+  [Test]
+  public void BuildLines_CurlyApostrophe_NormalizesToAsciiApostrophe()
+  {
+    // arrange
+    var parser = new UltraStarParser();
+    var lines = new[]
+    {
+      "#TITLE:Song",
+      "#BPM:120",
+      "#GAP:0",
+      ": 0 4 0 I\u2019ll",
+      "- 4",
+      "E"
+    };
+
+    // act
+    var song = parser.Parse(lines);
+    var result = LyricLineBuilder.BuildLines(song);
+
+    // assert
+    Assert.That(result.Count, Is.EqualTo(1));
+    Assert.That(result[0].Text, Is.EqualTo("I'll"));
+    Assert.That(result[0].Tokens[0].Text, Is.EqualTo("I'll"));
+  }
 }

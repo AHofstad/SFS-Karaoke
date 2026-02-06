@@ -75,9 +75,8 @@ public sealed class SongLibraryScanner
     if (txtPath != null)
     {
       var parser = new UltraStarParser();
-      using var stream = _fileSystem.File.OpenRead(txtPath);
-      using var reader = new StreamReader(stream);
-      metadata = parser.Parse(reader.ReadToEnd().Split('\n')).Metadata;
+      var lines = UltraStarTextLoader.ReadAllLines(_fileSystem, txtPath);
+      metadata = parser.Parse(lines).Metadata;
     }
 
     var audioPath = ResolveMediaPath(folder, metadata?.Audio, AudioExtensions);

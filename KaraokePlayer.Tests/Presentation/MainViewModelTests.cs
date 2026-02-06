@@ -39,7 +39,7 @@ public class MainViewModelTests
   }
 
   [Test]
-  public void LoadSongs_AfterCompletion_IsLoadingFalse()
+  public void LoadSongs_AfterCompletion_ShowsCompletionUntilDismissed()
   {
     // Arrange
     const string basePath = @"c:\app";
@@ -58,7 +58,38 @@ public class MainViewModelTests
     viewModel.LoadSongs();
 
     // Assert
+    Assert.That(viewModel.IsLoading, Is.True);
+    Assert.That(viewModel.IsLoadingComplete, Is.True);
+
+    viewModel.DismissLoadingOverlay();
     Assert.That(viewModel.IsLoading, Is.False);
+    Assert.That(viewModel.IsLoadingComplete, Is.False);
+  }
+
+  [Test]
+  public void LoadSongs_AfterCompletion_UpdatesImportedCount()
+  {
+    // Arrange
+    const string basePath = @"c:\app";
+    const string songFolderA = @"c:\app\songs\SongA";
+    const string songFolderB = @"c:\app\songs\SongB";
+    const string songTxt = "#TITLE:Song\n#BPM:120\n#GAP:0\n: 0 1 0 hi\nE";
+    var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+      { $@"{songFolderA}\song.txt", new MockFileData(songTxt) },
+      { $@"{songFolderA}\track.mp3", new MockFileData(string.Empty) },
+      { $@"{songFolderB}\song.txt", new MockFileData(songTxt) },
+      { $@"{songFolderB}\track.mp3", new MockFileData(string.Empty) },
+    });
+    fileSystemMock.AddFile($@"{basePath}\karaoke.settings.json", new MockFileData("{\"LanguageCode\":\"en-US\",\"WindowMode\":\"BorderlessFullscreen\"}"));
+    var settingsService = new KaraokePlayer.Configuration.SettingsService(basePath, fileSystemMock);
+    var viewModel = new MainViewModel(basePath, fileSystemMock, settingsService);
+
+    // Act
+    viewModel.LoadSongs();
+
+    // Assert
+    Assert.That(viewModel.LoadingCount, Is.EqualTo("Imported: 2"));
   }
 
   [Test]

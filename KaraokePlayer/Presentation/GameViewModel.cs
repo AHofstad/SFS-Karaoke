@@ -122,7 +122,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
     }
 
     var parser = new UltraStarParser();
-    var lines = fileSystem.File.ReadAllLines(song.TxtPath);
+    var lines = UltraStarTextLoader.ReadAllLines(fileSystem, song.TxtPath);
     LoadLyrics(parser.Parse(lines));
   }
 
@@ -213,7 +213,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
     }
 
     var parser = new UltraStarParser();
-    var lines = File.ReadAllLines(path);
+    var lines = UltraStarTextLoader.ReadAllLines(path);
     LoadLyrics(parser.Parse(lines));
   }
 

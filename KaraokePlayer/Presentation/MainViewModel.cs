@@ -73,7 +73,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     _basePath = basePath;
     _fileSystem = fileSystem;
     _settingsService = settingsService;
-    _dispatcher = global::System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+    _dispatcher = global::System.Windows.Application.Current?.Dispatcher;
     Options = new OptionsViewModel(settingsService);
     QueueView = new QueueViewModel(this);
     GameView = new GameViewModel(this);
@@ -522,8 +522,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     var parser = new UltraStarParser();
-    var text = _fileSystem.File.ReadAllText(SelectedSong.TxtPath);
-    var song = parser.Parse(text.Split('\n'));
+    var lines = UltraStarTextLoader.ReadAllLines(_fileSystem, SelectedSong.TxtPath);
+    var song = parser.Parse(lines);
     var timing = UltraStarTiming.TryCreate(song.Metadata);
     if (timing is null)
     {

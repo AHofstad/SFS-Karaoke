@@ -24,8 +24,7 @@ public sealed class UltraStarParser
 
   public UltraStarSong ParseFromFile(string path)
   {
-    var encoding = new UTF8Encoding(false, true);
-    var lines = File.ReadLines(path, encoding);
+    var lines = UltraStarTextLoader.ReadAllLines(path);
     return Parse(lines);
   }
 
