@@ -14,7 +14,7 @@ SFS Karaoke is a Windows karaoke player for UltraStar-style songs (`.txt` metada
 Portable self-contained nightly builds are published from GitHub Actions artifacts.
 
 - Download latest nightly:  
-  `https://nightly.link/AHofstad/SFS-Karaoke/workflows/nightly.yml/master/KaraokePlayerPortable.zip`
+  [https://nightly.link/AHofstad/SFS-Karaoke/workflows/nightly.yml/master/KaraokePlayerPortable.zip](https://nightly.link/AHofstad/SFS-Karaoke/workflows/nightly.yml/master/KaraokePlayerPortable.zip)
 
 If the link does not show a file yet, wait for the first successful run of the `nightly` workflow.
 
