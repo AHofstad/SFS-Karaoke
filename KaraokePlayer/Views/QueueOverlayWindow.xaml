@@ -30,7 +30,8 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <Border Grid.Row="0"
+    <Border x:Name="TopBar"
+            Grid.Row="0"
             Background="#7A0B0B0C"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"

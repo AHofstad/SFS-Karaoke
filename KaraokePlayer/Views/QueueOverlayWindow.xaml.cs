@@ -18,4 +18,9 @@ public partial class QueueOverlayWindow : Window
 
     BottomBar.Height = height;
   }
+
+  public void SetTitleVisible(bool isVisible)
+  {
+    TopBar.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+  }
 }

@@ -9,9 +9,11 @@ public partial class QueueView : System.Windows.Controls.UserControl
 {
   private const double _defaultOverlayHeight = 220d;
   private const double _dragThreshold = 4d;
+  private const int _previewDebounceMs = 500;
   private LibVLCSharp.Shared.LibVLC? _libVlc;
   private LibVLCSharp.Shared.MediaPlayer? _audioPlayer;
   private LibVLCSharp.Shared.MediaPlayer? _videoPlayer;
+  private DispatcherTimer? _previewDebounceTimer;
   private int _videoGapMs;
   private Window? _hostWindow;
   private QueueOverlayWindow? _overlayWindow;
@@ -179,6 +181,11 @@ public partial class QueueView : System.Windows.Controls.UserControl
     {
       Mute = true
     };
+    _previewDebounceTimer = new DispatcherTimer
+    {
+      Interval = TimeSpan.FromMilliseconds(_previewDebounceMs)
+    };
+    _previewDebounceTimer.Tick += PreviewDebounceTimer_Tick;
     PreviewSurface.MediaPlayer = _videoPlayer;
     _audioPlayer.TimeChanged += AudioPlayer_TimeChanged;
 
@@ -188,7 +195,16 @@ public partial class QueueView : System.Windows.Controls.UserControl
       {
         notifier.PropertyChanged += ViewModel_PropertyChanged;
       }
-      PlaySelected(viewModel);
+      if (viewModel.SelectedSong is null)
+      {
+        StopPreviewPlayback();
+        _overlayWindow?.SetTitleVisible(false);
+      }
+      else
+      {
+        PlaySelected(viewModel);
+        _overlayWindow?.SetTitleVisible(true);
+      }
     }
 
     _hostWindow = Window.GetWindow(this);
@@ -251,6 +267,12 @@ public partial class QueueView : System.Windows.Controls.UserControl
     if (audioPlayer is not null)
     {
       audioPlayer.TimeChanged -= AudioPlayer_TimeChanged;
+    }
+    if (_previewDebounceTimer is not null)
+    {
+      _previewDebounceTimer.Stop();
+      _previewDebounceTimer.Tick -= PreviewDebounceTimer_Tick;
+      _previewDebounceTimer = null;
     }
 
     if (audioPlayer is null && videoPlayer is null && libVlc is null)
@@ -390,8 +412,35 @@ public partial class QueueView : System.Windows.Controls.UserControl
     const string selectedSongProperty = nameof(KaraokePlayer.Presentation.QueueViewModel.SelectedSong);
     if (e.PropertyName == selectedSongProperty && DataContext is KaraokePlayer.Presentation.QueueViewModel viewModel)
     {
-      PlaySelected(viewModel);
+      SchedulePreview(viewModel);
     }
+  }
+
+  private void SchedulePreview(KaraokePlayer.Presentation.QueueViewModel viewModel)
+  {
+    if (viewModel.SelectedSong is null)
+    {
+      StopPreviewPlayback();
+      _overlayWindow?.SetTitleVisible(false);
+      return;
+    }
+
+    _overlayWindow?.SetTitleVisible(false);
+    _previewDebounceTimer?.Stop();
+    _previewDebounceTimer?.Start();
+  }
+
+  private void PreviewDebounceTimer_Tick(object? sender, EventArgs e)
+  {
+    _previewDebounceTimer?.Stop();
+    if (DataContext is not KaraokePlayer.Presentation.QueueViewModel viewModel || viewModel.SelectedSong is null)
+    {
+      _overlayWindow?.SetTitleVisible(false);
+      return;
+    }
+
+    PlaySelected(viewModel);
+    _overlayWindow?.SetTitleVisible(true);
   }
 
   private void PlaySelected(KaraokePlayer.Presentation.QueueViewModel viewModel)
@@ -489,5 +538,22 @@ public partial class QueueView : System.Windows.Controls.UserControl
     {
       _videoPlayer.Time = videoTimeMs;
     }
+  }
+
+  private void StopPreviewPlayback()
+  {
+    _audioPlayer?.Stop();
+    if (_audioPlayer is not null)
+    {
+      _audioPlayer.Media = null;
+    }
+
+    _videoPlayer?.Stop();
+    if (_videoPlayer is not null)
+    {
+      _videoPlayer.Media = null;
+    }
+
+    PreviewSurface.Visibility = Visibility.Collapsed;
   }
 }
