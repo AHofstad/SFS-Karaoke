@@ -43,6 +43,8 @@
             <ComboBox Margin="0,8,0,0" Width="{StaticResource OptionsComboWidth}" Height="{StaticResource OptionsControlHeight}"
                       ItemsSource="{Binding Languages, Source={x:Static loc:LocalizationService.Instance}}"
                       SelectedItem="{Binding CurrentLanguage, Source={x:Static loc:LocalizationService.Instance}}"
+                      HorizontalContentAlignment="Center"
+                      VerticalContentAlignment="Center"
                       DisplayMemberPath="DisplayName" />
           </StackPanel>
 
@@ -53,6 +55,8 @@
             <ComboBox Margin="0,8,0,0" Width="{StaticResource OptionsComboWidth}" Height="{StaticResource OptionsControlHeight}"
                       ItemsSource="{Binding WindowModes}"
                       SelectedItem="{Binding WindowMode}"
+                      HorizontalContentAlignment="Center"
+                      VerticalContentAlignment="Center"
                       DisplayMemberPath="DisplayName" />
           </StackPanel>
 
@@ -66,7 +70,9 @@
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <TextBox Text="{Binding SongsFolderPath}" MinWidth="{StaticResource OptionsTextBoxMinWidth}"
-                       Height="{StaticResource OptionsControlHeight}" IsReadOnly="True" />
+                       MinHeight="{StaticResource OptionsControlHeight}" IsReadOnly="True"
+                       TextAlignment="Center" VerticalContentAlignment="Center"
+                       TextWrapping="Wrap" AcceptsReturn="True" />
               <Button Grid.Column="1" Content="{Binding [BrowseButton], Source={x:Static loc:LocalizationService.Instance}}"
                       MinWidth="{StaticResource OptionsButtonMinWidth}" Height="{StaticResource OptionsControlHeight}"
                       Margin="10,0,0,0" Click="BrowseSongsFolder_Click" />

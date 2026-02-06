@@ -22,7 +22,7 @@ public sealed class SongLibraryScanner
     _fileSystem = fileSystem;
   }
 
-  public IReadOnlyList<SongEntry> Scan(string rootFolder)
+  public IReadOnlyList<SongEntry> Scan(string rootFolder, Action<int>? onSongImported = null)
   {
     if (string.IsNullOrWhiteSpace(rootFolder))
     {
@@ -35,6 +35,19 @@ public sealed class SongLibraryScanner
     }
 
     var entries = new List<SongEntry>();
+    var loaded = 0;
+    foreach (var (folder, txtPath) in EnumerateSongFolders(rootFolder))
+    {
+      entries.Add(ScanSongFolder(folder, txtPath));
+      loaded++;
+      onSongImported?.Invoke(loaded);
+    }
+
+    return entries;
+  }
+
+  private IEnumerable<(string Folder, string TxtPath)> EnumerateSongFolders(string rootFolder)
+  {
     var folders = new Queue<string>(_fileSystem.Directory.EnumerateDirectories(rootFolder));
 
     while (folders.Count > 0)
@@ -43,7 +56,7 @@ public sealed class SongLibraryScanner
       var txtPath = _fileSystem.Directory.EnumerateFiles(folder, "*.txt").FirstOrDefault();
       if (txtPath is not null)
       {
-        entries.Add(ScanSongFolder(folder, txtPath));
+        yield return (folder, txtPath);
         continue;
       }
 
@@ -52,8 +65,6 @@ public sealed class SongLibraryScanner
         folders.Enqueue(subfolder);
       }
     }
-
-    return entries;
   }
 
   private SongEntry ScanSongFolder(string folder, string? txtPath = null)

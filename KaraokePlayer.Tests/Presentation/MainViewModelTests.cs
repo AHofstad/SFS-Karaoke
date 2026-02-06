@@ -39,6 +39,29 @@ public class MainViewModelTests
   }
 
   [Test]
+  public void LoadSongs_AfterCompletion_IsLoadingFalse()
+  {
+    // Arrange
+    const string basePath = @"c:\app";
+    const string songFolder = @"c:\app\songs\SongA";
+    const string songTxt = "#TITLE:Song A\n#BPM:120\n#GAP:0\n: 0 1 0 hi\nE";
+    var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+      { $@"{songFolder}\song.txt", new MockFileData(songTxt) },
+      { $@"{songFolder}\track.mp3", new MockFileData(string.Empty) },
+    });
+    fileSystemMock.AddFile($@"{basePath}\karaoke.settings.json", new MockFileData("{\"LanguageCode\":\"en-US\",\"WindowMode\":\"BorderlessFullscreen\"}"));
+    var settingsService = new KaraokePlayer.Configuration.SettingsService(basePath, fileSystemMock);
+    var viewModel = new MainViewModel(basePath, fileSystemMock, settingsService);
+
+    // Act
+    viewModel.LoadSongs();
+
+    // Assert
+    Assert.That(viewModel.IsLoading, Is.False);
+  }
+
+  [Test]
   public void LoadSongs_SongsFolderMissing_SetsMissingStatusAndEmptyList()
   {
     // Arrange

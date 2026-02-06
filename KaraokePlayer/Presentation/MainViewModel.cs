@@ -1,7 +1,10 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 using KaraokeCore.Library;
 using KaraokeCore.Parsing;
 using KaraokeCore.Timing;
@@ -17,7 +20,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
   private readonly string _basePath;
   private readonly System.IO.Abstractions.IFileSystem _fileSystem;
   private readonly Configuration.SettingsService _settingsService;
-  private readonly SynchronizationContext? _syncContext;
+  private readonly Dispatcher? _dispatcher;
 
   private string _status = KaraokePlayer.Resources.Strings.StatusLoading;
   private string _libraryPath = string.Empty;
@@ -25,6 +28,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
   private double _loadingProgress;
   private string _remainingTime = "--:--";
   private double? _firstNoteStartMs;
+  private string _loadingCount = string.Empty;
   private string _selectedSongTitle = "--";
   private string _selectedSongArtist = "--";
   private string _selectedSongAudio = "--";
@@ -35,8 +39,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
   private string _selectedSongBackgroundPath = string.Empty;
   private bool _hasSelectedVideo;
   private bool _hasSelectedBackground;
+  private bool _isLoadingComplete;
   private object _currentView;
   private SongEntry? _currentQueueSong;
+  private bool _isLoading;
 
   public ObservableCollection<SongEntry> Songs { get; } = new();
   public ObservableCollection<SongEntry> Queue { get; } = new();
@@ -67,7 +73,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     _basePath = basePath;
     _fileSystem = fileSystem;
     _settingsService = settingsService;
-    _syncContext = SynchronizationContext.Current;
+    _dispatcher = global::System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
     Options = new OptionsViewModel(settingsService);
     QueueView = new QueueViewModel(this);
     GameView = new GameViewModel(this);
@@ -171,6 +177,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     set => SetField(ref _loadingProgress, value);
   }
 
+  public string LoadingCount
+  {
+    get => _loadingCount;
+    private set => SetField(ref _loadingCount, value);
+  }
+
+  public bool IsLoading
+  {
+    get => _isLoading;
+    private set => SetField(ref _isLoading, value);
+  }
+
+  public bool IsLoadingComplete
+  {
+    get => _isLoadingComplete;
+    private set => SetField(ref _isLoadingComplete, value);
+  }
+
   public string RemainingTime
   {
     get => _remainingTime;
@@ -181,26 +205,75 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
   public void LoadSongs()
   {
-    Status = KaraokePlayer.Resources.Strings.StatusLoading;
-    LoadingProgress = ProgressStart;
+    LoadSongsAsync().GetAwaiter().GetResult();
+  }
+
+  public async Task LoadSongsAsync()
+  {
+    var completedSuccessfully = false;
+    RunOnUiThread(() =>
+    {
+      Status = KaraokePlayer.Resources.Strings.StatusLoading;
+      LoadingProgress = ProgressStart;
+      LoadingCount = "Imported: 0";
+      IsLoadingComplete = false;
+      IsLoading = true;
+    });
 
     var settings = _settingsService.Load();
     var songsPath = string.IsNullOrWhiteSpace(settings.SongsFolderPath)
       ? _fileSystem.Path.Combine(_basePath, SongsFolderName)
       : settings.SongsFolderPath;
-    LibraryPath = songsPath;
+    RunOnUiThread(() => LibraryPath = songsPath);
 
-    var library = SongLibrary.Load(songsPath, _fileSystem);
-    Songs.Clear();
-    foreach (var entry in library.Entries)
+    try
     {
-      Songs.Add(entry);
-    }
+      var entries = await Task.Run(() =>
+      {
+        var scanner = new SongLibraryScanner(_fileSystem);
+        return scanner.Scan(songsPath, loaded =>
+        {
+          RunOnUiThread(() =>
+          {
+            LoadingCount = $"Imported: {loaded}";
+          });
+        });
+      });
 
-    Status = library.Entries.Count == 0
-      ? KaraokePlayer.Resources.Strings.StatusMissing
-      : KaraokePlayer.Resources.Strings.StatusLoaded;
-    LoadingProgress = ProgressComplete;
+      RunOnUiThread(() =>
+      {
+        Songs.Clear();
+        foreach (var entry in entries)
+        {
+          Songs.Add(entry);
+        }
+
+        Status = entries.Count == 0
+          ? KaraokePlayer.Resources.Strings.StatusMissing
+          : KaraokePlayer.Resources.Strings.StatusLoaded;
+        LoadingCount = $"Imported: {entries.Count}";
+        LoadingProgress = ProgressComplete;
+        IsLoadingComplete = true;
+      });
+      completedSuccessfully = true;
+    }
+    finally
+    {
+      if (!completedSuccessfully)
+      {
+        RunOnUiThread(() =>
+        {
+          IsLoading = false;
+          IsLoadingComplete = false;
+        });
+      }
+    }
+  }
+
+  public void DismissLoadingOverlay()
+  {
+    IsLoading = false;
+    IsLoadingComplete = false;
   }
 
   public double? GetFirstNoteStartMs()
@@ -423,20 +496,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
   private T RunOnUiThread<T>(Func<T> func)
   {
-    if (_syncContext is null || SynchronizationContext.Current == _syncContext)
+    if (_dispatcher is null || _dispatcher.CheckAccess())
     {
       return func();
     }
 
-    var result = default(T);
-    using var gate = new ManualResetEventSlim();
-    _syncContext.Post(_ =>
+    return _dispatcher.Invoke(func);
+  }
+
+  private void RunOnUiThread(Action action)
+  {
+    RunOnUiThread(() =>
     {
-      result = func();
-      gate.Set();
-    }, null);
-    gate.Wait();
-    return result!;
+      action();
+      return true;
+    });
   }
 
   private void UpdateFirstNoteStart()

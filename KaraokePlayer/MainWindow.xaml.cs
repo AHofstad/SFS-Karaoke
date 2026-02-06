@@ -35,17 +35,22 @@ public partial class MainWindow : Window
     _viewModel.Options.SongsFolderChanged += Options_SongsFolderChanged;
   }
 
-  private void OnLoaded(object sender, RoutedEventArgs e)
+  private async void OnLoaded(object sender, RoutedEventArgs e)
   {
     LoadWindowMode();
     _viewModel.ShowMainMenu();
-    _viewModel.LoadSongs();
+    await _viewModel.LoadSongsAsync();
     _ = _queueWebHost.StartAsync();
   }
 
-  private void ReloadLibrary_Click(object sender, RoutedEventArgs e)
+  private async void ReloadLibrary_Click(object sender, RoutedEventArgs e)
   {
-    _viewModel.LoadSongs();
+    await _viewModel.LoadSongsAsync();
+  }
+
+  private void LoadingOverlayOkay_Click(object sender, RoutedEventArgs e)
+  {
+    _viewModel.DismissLoadingOverlay();
   }
 
   private void SkipToFirstNote_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -169,9 +174,9 @@ public partial class MainWindow : Window
     e.CanExecute = _viewModel.CurrentView is Presentation.QueueViewModel && _viewModel.Songs.Count > 0;
   }
 
-  private void Options_SongsFolderChanged(object? sender, string path)
+  private async void Options_SongsFolderChanged(object? sender, string path)
   {
-    _viewModel.LoadSongs();
+    await _viewModel.LoadSongsAsync();
   }
 
   private void ToggleWindowMode_Executed(object sender, ExecutedRoutedEventArgs e)

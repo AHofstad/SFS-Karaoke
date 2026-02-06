@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KaraokePlayer"
+        xmlns:converters="clr-namespace:KaraokePlayer.Converters"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         xmlns:loc="clr-namespace:KaraokePlayer.Localization"
@@ -42,6 +43,8 @@
   </Window.CommandBindings>
 
   <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
     <SolidColorBrush x:Key="PanelBrush" Color="#191A1E" />
     <SolidColorBrush x:Key="AccentBrush" Color="#37B24D" />
     <SolidColorBrush x:Key="TextBrush" Color="#F1F3F5" />
@@ -69,5 +72,37 @@
 
   <Grid>
     <ContentControl Content="{Binding CurrentView}" />
+    <Grid x:Name="LoadingOverlay"
+          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"
+          Background="#AA000000"
+          Panel.ZIndex="10">
+      <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Background="#CC141517" CornerRadius="14" Padding="40">
+          <StackPanel Width="440">
+            <TextBlock x:Name="LoadingTitleText"
+                       Text="{Binding Status}"
+                       Foreground="{DynamicResource TextBrush}"
+                       FontSize="30"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="LoadingCountText"
+                       Text="{Binding LoadingCount}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       FontSize="20"
+                       Margin="0,10,0,0"
+                       HorizontalAlignment="Center" />
+            <Grid Height="38" Margin="0,22,0,0">
+              <Button x:Name="LoadingOverlayOkayButton"
+                      Content="OK"
+                      Width="120"
+                      Height="38"
+                      HorizontalAlignment="Center"
+                      Visibility="{Binding IsLoadingComplete, Converter={StaticResource BoolToVisibility}}"
+                      Click="LoadingOverlayOkay_Click" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Grid>
   </Grid>
 </Window>
