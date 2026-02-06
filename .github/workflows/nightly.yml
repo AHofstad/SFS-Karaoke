@@ -1,9 +1,6 @@
 name: nightly
 
 on:
-  push:
-    branches:
-      - master
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
@@ -20,6 +17,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore ./KaraokePlayer/KaraokePlayer.csproj
 
       - name: Build Portable Zip (Self-Contained)
         shell: pwsh
