@@ -38,7 +38,13 @@ public sealed class SongLibraryScanner
     var loaded = 0;
     foreach (var (folder, txtPath) in EnumerateSongFolders(rootFolder))
     {
-      entries.Add(ScanSongFolder(folder, txtPath));
+      var entry = ScanSongFolder(folder, txtPath);
+      if (string.IsNullOrWhiteSpace(entry.AudioPath))
+      {
+        continue;
+      }
+
+      entries.Add(entry);
       loaded++;
       onSongImported?.Invoke(loaded);
     }
@@ -92,7 +98,8 @@ public sealed class SongLibraryScanner
     if (!string.IsNullOrWhiteSpace(candidate))
     {
       var fromMetadata = _fileSystem.Path.Combine(folder, candidate);
-      if (_fileSystem.File.Exists(fromMetadata))
+      if (_fileSystem.File.Exists(fromMetadata)
+          && extensions.Contains(_fileSystem.Path.GetExtension(fromMetadata), StringComparer.OrdinalIgnoreCase))
       {
         return fromMetadata;
       }

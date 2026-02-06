@@ -157,4 +157,57 @@ public class SongLibraryScannerTests
     Assert.That(entries.Any(entry => entry.Metadata?.Title == "Song A"), Is.True);
     Assert.That(entries.Any(entry => entry.Metadata?.Title == "Nested"), Is.False);
   }
+
+  [Test]
+  public void Scan_VideoOnlySong_SkipsEntry()
+  {
+    // Arrange
+    const string root = @"c:\songs";
+    const string song = @"c:\songs\VideoOnly";
+    var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+      { $@"{song}\song.txt", new MockFileData("#TITLE:Video Only\n#VIDEO:clip.mp4\n#BPM:120\n#GAP:0\n: 0 1 0 hi\nE") },
+      { $@"{song}\clip.mp4", new MockFileData(string.Empty) },
+    });
+
+    // Act
+    var scanner = new SongLibraryScanner(fileSystemMock);
+    var entries = scanner.Scan(root);
+
+    // Assert
+    Assert.That(entries, Is.Empty);
+  }
+
+  [Test]
+  public void Scan_MetadataAudioPointsToMp4_UsesActualAudioFile()
+  {
+    // Arrange
+    const string root = @"c:\songs";
+    const string song = @"c:\songs\SongA";
+    var txt = """
+    #TITLE:Song A
+    #ARTIST:Artist A
+    #MP3:video-a.mp4
+    #VIDEO:video-a.mp4
+    #BPM:120
+    #GAP:0
+    : 0 1 0 hi
+    E
+    """;
+    var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
+    {
+      { $@"{song}\song.txt", new MockFileData(txt) },
+      { $@"{song}\video-a.mp4", new MockFileData(string.Empty) },
+      { $@"{song}\track-a.mp3", new MockFileData(string.Empty) },
+    });
+
+    // Act
+    var scanner = new SongLibraryScanner(fileSystemMock);
+    var entries = scanner.Scan(root);
+
+    // Assert
+    Assert.That(entries.Count, Is.EqualTo(1));
+    Assert.That(entries[0].AudioPath, Does.EndWith("track-a.mp3"));
+    Assert.That(entries[0].VideoPath, Does.EndWith("video-a.mp4"));
+  }
 }
