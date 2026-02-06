@@ -7,6 +7,7 @@
         WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        ShowActivated="False"
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True">
@@ -67,8 +68,9 @@
       </Setter>
     </Style>
   </Window.Resources>
-  <Grid Margin="24">
-    <StackPanel Orientation="Horizontal"
+  <Grid>
+    <Grid Margin="24">
+      <StackPanel Orientation="Horizontal"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Margin="0,0,0,0">
@@ -120,12 +122,12 @@
                                   VerticalAlignment="Center"
                                   Visibility="{Binding IsSkipPromptVisible, Converter={StaticResource BoolToVisibility}}" 
                                   FontWeight="Bold"/>
-    </StackPanel>
+      </StackPanel>
 
-    <Border Background="{StaticResource GameTitlePanelBrush}" CornerRadius="{StaticResource GameTitleCornerRadius}"
+      <Border Background="{StaticResource GameTitlePanelBrush}" CornerRadius="{StaticResource GameTitleCornerRadius}"
             HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0" Padding="18,12">
-      <StackPanel Orientation="Horizontal">
-        <controls:OutlinedTextBlock x:Name="GameSongArtistText"
+        <StackPanel Orientation="Horizontal">
+          <controls:OutlinedTextBlock x:Name="GameSongArtistText"
                                     Text="{Binding SongArtist}"
                                     Fill="White"
                                     Stroke="Black"
@@ -146,53 +148,53 @@
                                     StrokeThickness="{StaticResource GameTitleStrokeThickness}"
                                     FontSize="{StaticResource GameTitleFontSize}"
                                     FontWeight="Bold" />
-      </StackPanel>
-    </Border>
+        </StackPanel>
+      </Border>
 
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="960">
-      <ItemsControl ItemsSource="{Binding CurrentLyricTokens}" Margin="0,0,0,12">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel HorizontalAlignment="Center" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <controls:OutlinedTextBlock x:Name="CurrentLyricTokenText"
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="960">
+        <ItemsControl ItemsSource="{Binding CurrentLyricTokens}" Margin="0,0,0,12">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel HorizontalAlignment="Center" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:OutlinedTextBlock x:Name="CurrentLyricTokenText"
                                         Text="{Binding Text}"
                                         Stroke="Black"
                                         StrokeThickness="{StaticResource GameLyricStrokeThickness}"
                                         FontSize="42"
                                         FontWeight="SemiBold">
-              <controls:OutlinedTextBlock.Style>
-                <Style TargetType="controls:OutlinedTextBlock">
-                  <Setter Property="Fill" Value="White" />
-                  <Setter Property="LayoutTransform">
-                    <Setter.Value>
-                      <ScaleTransform ScaleX="1" ScaleY="1" />
-                    </Setter.Value>
-                  </Setter>
-                  <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsActive}" Value="True">
-                      <Setter Property="Fill" Value="#FFD43B" />
-                      <Setter Property="Underline" Value="True" />
-                      <Setter Property="UnderlineThickness" Value="3" />
-                      <Setter Property="FontWeight" Value="Bold" />
-                      <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
-                      <Setter Property="LayoutTransform">
-                        <Setter.Value>
-                          <ScaleTransform ScaleX="1.12" ScaleY="1.12" />
-                        </Setter.Value>
-                      </Setter>
-                    </DataTrigger>
-                  </Style.Triggers>
-                </Style>
-              </controls:OutlinedTextBlock.Style>
-            </controls:OutlinedTextBlock>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <controls:OutlinedTextBlock x:Name="NextLyricLineText"
+                <controls:OutlinedTextBlock.Style>
+                  <Style TargetType="controls:OutlinedTextBlock">
+                    <Setter Property="Fill" Value="White" />
+                    <Setter Property="LayoutTransform">
+                      <Setter.Value>
+                        <ScaleTransform ScaleX="1" ScaleY="1" />
+                      </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsActive}" Value="True">
+                        <Setter Property="Fill" Value="#FFD43B" />
+                        <Setter Property="Underline" Value="True" />
+                        <Setter Property="UnderlineThickness" Value="3" />
+                        <Setter Property="FontWeight" Value="Bold" />
+                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+                        <Setter Property="LayoutTransform">
+                          <Setter.Value>
+                            <ScaleTransform ScaleX="1.12" ScaleY="1.12" />
+                          </Setter.Value>
+                        </Setter>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </controls:OutlinedTextBlock.Style>
+              </controls:OutlinedTextBlock>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <controls:OutlinedTextBlock x:Name="NextLyricLineText"
                                   Text="{Binding NextLyricLineText}"
                                   Fill="White"
                                   Stroke="Black"
@@ -200,6 +202,63 @@
                                   FontSize="36"
                                   TextAlignment="Center"
                                   TextWrapping="Wrap" />
-    </StackPanel>
+      </StackPanel>
+    </Grid>
+
+    <Grid x:Name="PauseMenuOverlay" Visibility="Collapsed" Background="#AA000000">
+      <Border Width="360"
+              Background="#DD141517"
+              CornerRadius="12"
+              Padding="20"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel>
+          <TextBlock Text="Paused"
+                     Foreground="White"
+                     FontSize="32"
+                     FontWeight="Bold"
+                     HorizontalAlignment="Center"
+                     Margin="0,0,0,16" />
+          <Button Content="Resume" Height="44" Margin="0,0,0,10" Click="PauseResume_Click" />
+          <Button Content="Restart" Height="44" Margin="0,0,0,10" Click="PauseRestart_Click" />
+          <Button Content="Quit" Height="44" Click="PauseQuit_Click" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Grid x:Name="UpNextOverlay"
+          Visibility="{Binding IsUpcomingQueuePreviewVisible, Converter={StaticResource BoolToVisibility}}"
+          Background="#AA000000">
+      <Border Width="540"
+              Background="#DD141517"
+              CornerRadius="12"
+              Padding="24"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel>
+          <TextBlock Text="Up Next"
+                     Foreground="White"
+                     FontSize="30"
+                     FontWeight="Bold"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding UpcomingQueueCountdownSeconds, StringFormat=Starting in {0} seconds...}"
+                     Foreground="#CCE9ECEF"
+                     FontSize="16"
+                     Margin="0,6,0,14"
+                     HorizontalAlignment="Center" />
+          <ItemsControl ItemsSource="{Binding UpcomingQueuePreviewSongs}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}"
+                           Foreground="White"
+                           FontSize="22"
+                           Margin="0,4,0,4"
+                           TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </Grid>
   </Grid>
 </Window>

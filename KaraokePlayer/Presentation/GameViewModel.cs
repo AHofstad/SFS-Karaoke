@@ -23,6 +23,9 @@ public sealed class GameViewModel : INotifyPropertyChanged
   private string _currentLyricLineText = string.Empty;
   private string _nextLyricLineText = string.Empty;
   private IReadOnlyList<LyricTokenView> _currentLyricTokens = Array.Empty<LyricTokenView>();
+  private IReadOnlyList<string> _upcomingQueuePreviewSongs = Array.Empty<string>();
+  private bool _isUpcomingQueuePreviewVisible;
+  private int _upcomingQueueCountdownSeconds;
   private double? _firstNoteStartMs;
   private List<LyricLine> _lyrics = new();
   private int _currentLineIndex = -1;
@@ -79,6 +82,24 @@ public sealed class GameViewModel : INotifyPropertyChanged
   {
     get => _currentLyricTokens;
     private set => SetField(ref _currentLyricTokens, value);
+  }
+
+  public IReadOnlyList<string> UpcomingQueuePreviewSongs
+  {
+    get => _upcomingQueuePreviewSongs;
+    private set => SetField(ref _upcomingQueuePreviewSongs, value);
+  }
+
+  public bool IsUpcomingQueuePreviewVisible
+  {
+    get => _isUpcomingQueuePreviewVisible;
+    private set => SetField(ref _isUpcomingQueuePreviewVisible, value);
+  }
+
+  public int UpcomingQueueCountdownSeconds
+  {
+    get => _upcomingQueueCountdownSeconds;
+    private set => SetField(ref _upcomingQueueCountdownSeconds, value);
   }
 
   public double? FirstNoteStartMs
@@ -220,6 +241,35 @@ public sealed class GameViewModel : INotifyPropertyChanged
   public void RequestSkipToFirstNote()
   {
     SkipToFirstNoteRequested?.Invoke(this, EventArgs.Empty);
+  }
+
+  public void ShowUpcomingQueuePreview(int maxItems)
+  {
+    var snapshot = _root.GetQueueSnapshot();
+    var songs = snapshot
+      .Take(Math.Max(0, maxItems))
+      .Select(entry =>
+      {
+        var title = string.IsNullOrWhiteSpace(entry.Metadata?.Title) ? "--" : entry.Metadata!.Title;
+        var artist = string.IsNullOrWhiteSpace(entry.Metadata?.Artist) ? "--" : entry.Metadata!.Artist;
+        return $"{title} - {artist}";
+      })
+      .ToList();
+
+    UpcomingQueuePreviewSongs = songs;
+    IsUpcomingQueuePreviewVisible = true;
+  }
+
+  public void UpdateUpcomingQueueCountdown(int seconds)
+  {
+    UpcomingQueueCountdownSeconds = Math.Max(0, seconds);
+  }
+
+  public void HideUpcomingQueuePreview()
+  {
+    IsUpcomingQueuePreviewVisible = false;
+    UpcomingQueuePreviewSongs = Array.Empty<string>();
+    UpcomingQueueCountdownSeconds = 0;
   }
 
   private void LoadLyrics(KaraokeCore.Models.UltraStarSong song)

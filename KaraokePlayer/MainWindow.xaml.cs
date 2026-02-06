@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using KaraokePlayer.Presentation;
+using KaraokePlayer.Views;
 using KaraokePlayer.Web;
 
 namespace KaraokePlayer;
@@ -133,6 +135,12 @@ public partial class MainWindow : Window
 
     if (_viewModel.CurrentView is Presentation.GameViewModel)
     {
+      var gameView = FindVisualChild<GameView>(this);
+      if (gameView is not null && gameView.TryAdvanceUpcomingQueueNow())
+      {
+        return;
+      }
+
       _viewModel.GameView.RequestSkipToFirstNote();
     }
   }
@@ -147,7 +155,7 @@ public partial class MainWindow : Window
 
     if (_viewModel.CurrentView is Presentation.GameViewModel)
     {
-      e.CanExecute = _viewModel.HasSelectedSong;
+      e.CanExecute = _viewModel.CurrentQueueSong is not null;
       return;
     }
 
@@ -156,21 +164,47 @@ public partial class MainWindow : Window
 
   private void PreviousSong_Executed(object sender, ExecutedRoutedEventArgs e)
   {
+    if (_viewModel.CurrentView is Presentation.GameViewModel)
+    {
+      var gameView = FindVisualChild<GameView>(this);
+      gameView?.TrySeekRelativeSeconds(-10);
+      return;
+    }
+
     _viewModel.SelectPreviousSong();
   }
 
   private void PreviousSong_CanExecute(object sender, CanExecuteRoutedEventArgs e)
   {
+    if (_viewModel.CurrentView is Presentation.GameViewModel)
+    {
+      e.CanExecute = _viewModel.CurrentQueueSong is not null;
+      return;
+    }
+
     e.CanExecute = _viewModel.CurrentView is Presentation.QueueViewModel && _viewModel.Songs.Count > 0;
   }
 
   private void NextSong_Executed(object sender, ExecutedRoutedEventArgs e)
   {
+    if (_viewModel.CurrentView is Presentation.GameViewModel)
+    {
+      var gameView = FindVisualChild<GameView>(this);
+      gameView?.TrySeekRelativeSeconds(10);
+      return;
+    }
+
     _viewModel.SelectNextSong();
   }
 
   private void NextSong_CanExecute(object sender, CanExecuteRoutedEventArgs e)
   {
+    if (_viewModel.CurrentView is Presentation.GameViewModel)
+    {
+      e.CanExecute = _viewModel.CurrentQueueSong is not null;
+      return;
+    }
+
     e.CanExecute = _viewModel.CurrentView is Presentation.QueueViewModel && _viewModel.Songs.Count > 0;
   }
 
@@ -244,6 +278,15 @@ public partial class MainWindow : Window
 
   private void Back_Executed(object sender, ExecutedRoutedEventArgs e)
   {
+    if (_viewModel.CurrentView is Presentation.GameViewModel)
+    {
+      var gameView = FindVisualChild<GameView>(this);
+      if (gameView is not null && gameView.TogglePauseMenu())
+      {
+        return;
+      }
+    }
+
     if (_viewModel.CurrentView is Presentation.OptionsViewModel)
     {
       _viewModel.Options.Save();
@@ -285,6 +328,26 @@ public partial class MainWindow : Window
   {
     await _queueWebHost.DisposeAsync();
     base.OnClosed(e);
+  }
+
+  private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+  {
+    for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+    {
+      var child = VisualTreeHelper.GetChild(parent, i);
+      if (child is T target)
+      {
+        return target;
+      }
+
+      var nested = FindVisualChild<T>(child);
+      if (nested is not null)
+      {
+        return nested;
+      }
+    }
+
+    return null;
   }
 
 }

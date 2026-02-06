@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace KaraokePlayer.Views;
@@ -16,9 +17,15 @@ public partial class GameView : System.Windows.Controls.UserControl
   private long _lastKnownTimeMs;
   private DateTime _lastTimeSyncUtc;
   private bool _isScrubbing;
+  private bool _isPausedByMenu;
+  private DispatcherTimer? _nextSongDelayTimer;
+  private bool _isNextSongDelayPending;
+  private int _nextSongCountdownSeconds;
   private const long _skipMinimumLeadMs = 3000;
   private const long _skipOffsetMs = 2000;
   private const long _maxVideoDriftMs = 80;
+  private const int _nextSongDelaySeconds = 10;
+  private const int _upcomingPreviewCount = 5;
 
   public GameView()
   {
@@ -73,6 +80,9 @@ public partial class GameView : System.Windows.Controls.UserControl
       _gameOverlay.Loaded += LyricsOverlay_Loaded;
       _gameOverlay.ScrubStarted += GameOverlay_ScrubStarted;
       _gameOverlay.ScrubCompleted += GameOverlay_ScrubCompleted;
+      _gameOverlay.PauseResumeRequested += GameOverlay_PauseResumeRequested;
+      _gameOverlay.PauseRestartRequested += GameOverlay_PauseRestartRequested;
+      _gameOverlay.PauseQuitRequested += GameOverlay_PauseQuitRequested;
       _gameOverlay.Show();
     }
 
@@ -89,6 +99,8 @@ public partial class GameView : System.Windows.Controls.UserControl
     {
       _hostWindow.LocationChanged += HostWindow_LocationChanged;
       _hostWindow.SizeChanged += HostWindow_SizeChanged;
+      _hostWindow.Activated += HostWindow_Activated;
+      _hostWindow.Deactivated += HostWindow_Deactivated;
     }
     Dispatcher.BeginInvoke(UpdateOverlayPlacement, DispatcherPriority.Loaded);
   }
@@ -116,12 +128,16 @@ public partial class GameView : System.Windows.Controls.UserControl
       _lyricTimer = null;
     }
 
+    CancelNextSongDelay();
+
     LayoutUpdated -= Overlay_LayoutUpdated;
     GameSurface.SizeChanged -= Overlay_SizeChanged;
     if (_hostWindow is not null)
     {
       _hostWindow.LocationChanged -= HostWindow_LocationChanged;
       _hostWindow.SizeChanged -= HostWindow_SizeChanged;
+      _hostWindow.Activated -= HostWindow_Activated;
+      _hostWindow.Deactivated -= HostWindow_Deactivated;
       _hostWindow = null;
     }
 
@@ -130,6 +146,9 @@ public partial class GameView : System.Windows.Controls.UserControl
       _gameOverlay.Loaded -= LyricsOverlay_Loaded;
       _gameOverlay.ScrubStarted -= GameOverlay_ScrubStarted;
       _gameOverlay.ScrubCompleted -= GameOverlay_ScrubCompleted;
+      _gameOverlay.PauseResumeRequested -= GameOverlay_PauseResumeRequested;
+      _gameOverlay.PauseRestartRequested -= GameOverlay_PauseRestartRequested;
+      _gameOverlay.PauseQuitRequested -= GameOverlay_PauseQuitRequested;
       _gameOverlay.Close();
       _gameOverlay = null;
     }
@@ -165,6 +184,9 @@ public partial class GameView : System.Windows.Controls.UserControl
     {
       return;
     }
+
+    viewModel.HideUpcomingQueuePreview();
+    _isNextSongDelayPending = false;
 
     var song = viewModel.CurrentSong;
     _videoGapMs = song?.Metadata?.VideoGapMs ?? 0;
@@ -234,18 +256,19 @@ public partial class GameView : System.Windows.Controls.UserControl
   {
     Dispatcher.BeginInvoke(() =>
     {
-      if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
+      if (DataContext is not KaraokePlayer.Presentation.GameViewModel viewModel || _isNextSongDelayPending)
       {
-        var advanced = viewModel.TryAdvanceQueue();
-        if (advanced)
-        {
-          _lastKnownTimeMs = 0;
-          _lastTimeSyncUtc = DateTime.UtcNow;
-          PlaySong(viewModel);
-          viewModel.EnsureLyricsLoaded();
-          viewModel.UpdateLyricDisplay(0);
-        }
+        return;
       }
+
+      _audioPlayer?.Stop();
+      _videoPlayer?.Stop();
+      _isNextSongDelayPending = true;
+      viewModel.ShowUpcomingQueuePreview(_upcomingPreviewCount);
+      _nextSongCountdownSeconds = _nextSongDelaySeconds;
+      viewModel.UpdateUpcomingQueueCountdown(_nextSongCountdownSeconds);
+      EnsureNextSongDelayTimer();
+      _nextSongDelayTimer?.Start();
     });
   }
 
@@ -328,6 +351,41 @@ public partial class GameView : System.Windows.Controls.UserControl
     UpdateOverlayPlacement();
   }
 
+  private void HostWindow_Activated(object? sender, EventArgs e)
+  {
+    UpdateOverlayActivationVisibility();
+  }
+
+  private void HostWindow_Deactivated(object? sender, EventArgs e)
+  {
+    Dispatcher.BeginInvoke(UpdateOverlayActivationVisibility, DispatcherPriority.ApplicationIdle);
+  }
+
+  private void UpdateOverlayActivationVisibility()
+  {
+    if (_gameOverlay is null)
+    {
+      return;
+    }
+
+    var hasActiveAppWindow = global::System.Windows.Application.Current.Windows
+      .OfType<Window>()
+      .Any(window => window.IsActive);
+
+    if (hasActiveAppWindow)
+    {
+      if (!_gameOverlay.IsVisible)
+      {
+        _gameOverlay.Show();
+      }
+
+      UpdateOverlayPlacement();
+      return;
+    }
+
+    _gameOverlay.Hide();
+  }
+
   private void UpdateOverlayPlacement()
   {
     if (!IsLoaded || _gameOverlay is null)
@@ -375,7 +433,7 @@ public partial class GameView : System.Windows.Controls.UserControl
 
     var nowUtc = DateTime.UtcNow;
     var baseTimeMs = _lastKnownTimeMs == 0 ? _audioPlayer.Time : _lastKnownTimeMs;
-    var elapsedMs = (nowUtc - _lastTimeSyncUtc).TotalMilliseconds;
+    var elapsedMs = _isPausedByMenu ? 0 : (nowUtc - _lastTimeSyncUtc).TotalMilliseconds;
     var estimatedMs = baseTimeMs + elapsedMs;
 
     if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
@@ -455,5 +513,235 @@ public partial class GameView : System.Windows.Controls.UserControl
     {
       _videoPlayer.Time = videoTimeMs;
     }
+  }
+
+  private void EnsureNextSongDelayTimer()
+  {
+    if (_nextSongDelayTimer is not null)
+    {
+      return;
+    }
+
+    _nextSongDelayTimer = new DispatcherTimer
+    {
+      Interval = TimeSpan.FromSeconds(1)
+    };
+    _nextSongDelayTimer.Tick += NextSongDelayTimer_Tick;
+  }
+
+  private void NextSongDelayTimer_Tick(object? sender, EventArgs e)
+  {
+    if (DataContext is not KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      return;
+    }
+
+    _nextSongCountdownSeconds--;
+    viewModel.UpdateUpcomingQueueCountdown(_nextSongCountdownSeconds);
+    if (_nextSongCountdownSeconds > 0)
+    {
+      return;
+    }
+
+    AdvanceAfterUpcomingQueuePreview(viewModel);
+  }
+
+  private void CancelNextSongDelay()
+  {
+    if (_nextSongDelayTimer is not null)
+    {
+      _nextSongDelayTimer.Stop();
+      _nextSongDelayTimer.Tick -= NextSongDelayTimer_Tick;
+      _nextSongDelayTimer = null;
+    }
+
+    _isNextSongDelayPending = false;
+    _nextSongCountdownSeconds = 0;
+    if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      viewModel.HideUpcomingQueuePreview();
+    }
+  }
+
+  private void AdvanceAfterUpcomingQueuePreview(KaraokePlayer.Presentation.GameViewModel viewModel)
+  {
+    _nextSongDelayTimer?.Stop();
+    _isNextSongDelayPending = false;
+    _nextSongCountdownSeconds = 0;
+
+    viewModel.HideUpcomingQueuePreview();
+    var advanced = viewModel.TryAdvanceQueue();
+    if (!advanced)
+    {
+      return;
+    }
+
+    _lastKnownTimeMs = 0;
+    _lastTimeSyncUtc = DateTime.UtcNow;
+    PlaySong(viewModel);
+    viewModel.EnsureLyricsLoaded();
+    viewModel.UpdateLyricDisplay(0);
+  }
+
+  public bool TryAdvanceUpcomingQueueNow()
+  {
+    if (!_isNextSongDelayPending || DataContext is not KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      return false;
+    }
+
+    AdvanceAfterUpcomingQueuePreview(viewModel);
+    return true;
+  }
+
+  public bool TrySeekRelativeSeconds(int deltaSeconds)
+  {
+    if (_audioPlayer is null || DataContext is not KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      return false;
+    }
+
+    if (_isNextSongDelayPending)
+    {
+      return false;
+    }
+
+    var durationMs = _audioPlayer.Length;
+    if (durationMs <= 0)
+    {
+      return false;
+    }
+
+    var targetMs = _audioPlayer.Time + deltaSeconds * 1000L;
+    targetMs = Math.Max(0, Math.Min(durationMs, targetMs));
+    _audioPlayer.Time = targetMs;
+    _lastKnownTimeMs = targetMs;
+    _lastTimeSyncUtc = DateTime.UtcNow;
+    SyncVideoToAudio(targetMs);
+    viewModel.UpdateLyricDisplay(targetMs);
+    viewModel.UpdatePlaybackProgress(targetMs, durationMs);
+    return true;
+  }
+
+  public bool TogglePauseMenu()
+  {
+    if (_gameOverlay is null)
+    {
+      return false;
+    }
+
+    if (_gameOverlay.IsPauseMenuVisible)
+    {
+      ResumeFromPauseMenu();
+      return true;
+    }
+
+    OpenPauseMenu();
+    return true;
+  }
+
+  private void OpenPauseMenu()
+  {
+    if (_audioPlayer is not null)
+    {
+      _lastKnownTimeMs = _audioPlayer.Time;
+      _lastTimeSyncUtc = DateTime.UtcNow;
+      _audioPlayer.Pause();
+    }
+
+    _videoPlayer?.Pause();
+    _isPausedByMenu = true;
+    _gameOverlay?.ShowPauseMenu();
+  }
+
+  private void ResumeFromPauseMenu()
+  {
+    _gameOverlay?.HidePauseMenu();
+    _isPausedByMenu = false;
+
+    if (_audioPlayer is not null)
+    {
+      _audioPlayer.Play();
+      _lastKnownTimeMs = _audioPlayer.Time;
+      _lastTimeSyncUtc = DateTime.UtcNow;
+      SyncVideoToAudio(_audioPlayer.Time);
+    }
+
+    RestoreMainWindowFocus();
+  }
+
+  private void RestartFromPauseMenu()
+  {
+    if (_audioPlayer is null)
+    {
+      return;
+    }
+
+    CancelNextSongDelay();
+
+    _audioPlayer.Time = 0;
+    _lastKnownTimeMs = 0;
+    _lastTimeSyncUtc = DateTime.UtcNow;
+    _isPausedByMenu = false;
+    _gameOverlay?.HidePauseMenu();
+    SyncVideoToAudio(0);
+    _audioPlayer.Play();
+
+    if (DataContext is KaraokePlayer.Presentation.GameViewModel viewModel)
+    {
+      viewModel.UpdateLyricDisplay(0);
+      viewModel.UpdatePlaybackProgress(0, _audioPlayer.Length);
+    }
+
+    RestoreMainWindowFocus();
+  }
+
+  private void QuitFromPauseMenu()
+  {
+    CancelNextSongDelay();
+    GameSurface.MediaPlayer = null;
+    GameSurface.Visibility = Visibility.Hidden;
+    _audioPlayer?.Stop();
+    _videoPlayer?.Stop();
+    _isPausedByMenu = false;
+    _gameOverlay?.HidePauseMenu();
+
+    if (global::System.Windows.Application.Current.MainWindow?.DataContext is KaraokePlayer.Presentation.MainViewModel rootViewModel)
+    {
+      rootViewModel.NavigateBack();
+    }
+
+    RestoreMainWindowFocus();
+  }
+
+  private void GameOverlay_PauseResumeRequested(object? sender, EventArgs e)
+  {
+    ResumeFromPauseMenu();
+  }
+
+  private void GameOverlay_PauseRestartRequested(object? sender, EventArgs e)
+  {
+    RestartFromPauseMenu();
+  }
+
+  private void GameOverlay_PauseQuitRequested(object? sender, EventArgs e)
+  {
+    QuitFromPauseMenu();
+  }
+
+  private void RestoreMainWindowFocus()
+  {
+    var targetWindow = _hostWindow ?? global::System.Windows.Application.Current.MainWindow;
+    if (targetWindow is null)
+    {
+      return;
+    }
+
+    Dispatcher.BeginInvoke(() =>
+    {
+      targetWindow.Activate();
+      Keyboard.Focus(targetWindow);
+      Focus();
+    }, DispatcherPriority.ApplicationIdle);
   }
 }
