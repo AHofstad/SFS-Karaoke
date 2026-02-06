@@ -1,6 +1,6 @@
-using System;
 using System.IO;
 using System.Windows;
+
 namespace KaraokePlayer;
 
 /// <summary>
@@ -8,15 +8,15 @@ namespace KaraokePlayer;
 /// </summary>
 public partial class App : System.Windows.Application
 {
-  private const string LibVlcFolderName = "libvlc";
-  private const string LibVlcX64FolderName = "win-x64";
-  private const string LibVlcX86FolderName = "win-x86";
+  private const string _libVlcFolderName = "libvlc";
+  private const string _libVlcX64FolderName = "win-x64";
+  private const string _libVlcX86FolderName = "win-x86";
   protected override void OnStartup(StartupEventArgs e)
   {
     base.OnStartup(e);
 
-    var baseLibVlcPath = Path.Combine(AppContext.BaseDirectory, LibVlcFolderName);
-    var architectureFolder = Environment.Is64BitProcess ? LibVlcX64FolderName : LibVlcX86FolderName;
+    var baseLibVlcPath = Path.Combine(AppContext.BaseDirectory, _libVlcFolderName);
+    var architectureFolder = Environment.Is64BitProcess ? _libVlcX64FolderName : _libVlcX86FolderName;
     var architecturePath = Path.Combine(baseLibVlcPath, architectureFolder);
     var libVlcPath = Directory.Exists(architecturePath)
       ? architecturePath

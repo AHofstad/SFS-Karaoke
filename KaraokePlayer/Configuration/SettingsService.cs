@@ -1,16 +1,16 @@
-using System.Text.Json;
 using System.IO.Abstractions;
+using System.Text.Json;
 
 namespace KaraokePlayer.Configuration;
 
 public sealed class SettingsService
 {
-  private const string DefaultFileName = "karaoke.settings.json";
-  private const string DefaultLanguageCode = "en-US";
-  private const string DefaultSongsFolderName = "songs";
-  private const string DefaultWindowMode = "BorderlessFullscreen";
-  private const int DefaultWindowedWidth = 1280;
-  private const int DefaultWindowedHeight = 720;
+  private const string _defaultFileName = "karaoke.settings.json";
+  private const string _defaultLanguageCode = "en-US";
+  private const string _defaultSongsFolderName = "songs";
+  private const string _defaultWindowMode = "BorderlessFullscreen";
+  private const int _defaultWindowedWidth = 1280;
+  private const int _defaultWindowedHeight = 720;
 
   public static SettingsService Instance { get; } = new(AppDomain.CurrentDomain.BaseDirectory, new FileSystem());
 
@@ -62,18 +62,18 @@ public sealed class SettingsService
 
   private string GetSettingsPath()
   {
-    return _fileSystem.Path.Combine(_basePath, DefaultFileName);
+    return _fileSystem.Path.Combine(_basePath, _defaultFileName);
   }
 
   private AppSettings CreateDefaultSettings()
   {
     return new AppSettings
     {
-      LanguageCode = DefaultLanguageCode,
-      SongsFolderPath = _fileSystem.Path.Combine(_basePath, DefaultSongsFolderName),
-      WindowMode = DefaultWindowMode,
-      WindowedWidth = DefaultWindowedWidth,
-      WindowedHeight = DefaultWindowedHeight,
+      LanguageCode = _defaultLanguageCode,
+      SongsFolderPath = _fileSystem.Path.Combine(_basePath, _defaultSongsFolderName),
+      WindowMode = _defaultWindowMode,
+      WindowedWidth = _defaultWindowedWidth,
+      WindowedHeight = _defaultWindowedHeight,
     };
   }
 
@@ -81,27 +81,27 @@ public sealed class SettingsService
   {
     if (string.IsNullOrWhiteSpace(settings.LanguageCode))
     {
-      settings.LanguageCode = DefaultLanguageCode;
+      settings.LanguageCode = _defaultLanguageCode;
     }
 
     if (string.IsNullOrWhiteSpace(settings.SongsFolderPath))
     {
-      settings.SongsFolderPath = _fileSystem.Path.Combine(_basePath, DefaultSongsFolderName);
+      settings.SongsFolderPath = _fileSystem.Path.Combine(_basePath, _defaultSongsFolderName);
     }
 
     if (string.IsNullOrWhiteSpace(settings.WindowMode))
     {
-      settings.WindowMode = DefaultWindowMode;
+      settings.WindowMode = _defaultWindowMode;
     }
 
-    if (!settings.WindowedWidth.HasValue || settings.WindowedWidth.Value < DefaultWindowedWidth)
+    if (!settings.WindowedWidth.HasValue || settings.WindowedWidth.Value < _defaultWindowedWidth)
     {
-      settings.WindowedWidth = DefaultWindowedWidth;
+      settings.WindowedWidth = _defaultWindowedWidth;
     }
 
-    if (!settings.WindowedHeight.HasValue || settings.WindowedHeight.Value < DefaultWindowedHeight)
+    if (!settings.WindowedHeight.HasValue || settings.WindowedHeight.Value < _defaultWindowedHeight)
     {
-      settings.WindowedHeight = DefaultWindowedHeight;
+      settings.WindowedHeight = _defaultWindowedHeight;
     }
 
     return settings;

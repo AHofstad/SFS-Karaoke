@@ -1,14 +1,14 @@
+using System.IO.Abstractions.TestingHelpers;
 using KaraokePlayer.Configuration;
 using KaraokePlayer.Localization;
 using NUnit.Framework;
-using System.IO.Abstractions.TestingHelpers;
 
 namespace KaraokePlayer.Tests.Localization;
 
 public class LocalizationServiceTests
 {
-  private const string BasePath = @"c:\app";
-  private const string SettingsPath = @"c:\app\karaoke.settings.json";
+  private const string _basePath = @"c:\app";
+  private const string _settingsPath = @"c:\app\karaoke.settings.json";
 
   [Test]
   public void Constructor_LoadsLanguageFromSettings()
@@ -16,9 +16,9 @@ public class LocalizationServiceTests
     // Arrange
     var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-      { SettingsPath, new MockFileData("{\"LanguageCode\":\"nl-NL\"}") },
+      { _settingsPath, new MockFileData("{\"LanguageCode\":\"nl-NL\"}") },
     });
-    var settingsService = new SettingsService(BasePath, fileSystemMock);
+    var settingsService = new SettingsService(_basePath, fileSystemMock);
 
     // Act
     var service = new LocalizationService(settingsService);
@@ -32,7 +32,7 @@ public class LocalizationServiceTests
   {
     // Arrange
     var fileSystemMock = new MockFileSystem();
-    var settingsService = new SettingsService(BasePath, fileSystemMock);
+    var settingsService = new SettingsService(_basePath, fileSystemMock);
     var service = new LocalizationService(settingsService);
     var dutch = service.Languages.First(language => language.Code == "nl-NL");
 
@@ -49,7 +49,7 @@ public class LocalizationServiceTests
   {
     // Arrange
     var fileSystemMock = new MockFileSystem();
-    var settingsService = new SettingsService(BasePath, fileSystemMock);
+    var settingsService = new SettingsService(_basePath, fileSystemMock);
     var service = new LocalizationService(settingsService);
     var dutch = service.Languages.First(language => language.Code == "nl-NL");
     string? lastProperty = null;
@@ -70,9 +70,9 @@ public class LocalizationServiceTests
     // Arrange
     var fileSystemMock = new MockFileSystem(new Dictionary<string, MockFileData>
     {
-      { SettingsPath, new MockFileData($"{{\"LanguageCode\":\"{code}\"}}") },
+      { _settingsPath, new MockFileData($"{{\"LanguageCode\":\"{code}\"}}") },
     });
-    var settingsService = new SettingsService(BasePath, fileSystemMock);
+    var settingsService = new SettingsService(_basePath, fileSystemMock);
 
     // Act
     var service = new LocalizationService(settingsService);

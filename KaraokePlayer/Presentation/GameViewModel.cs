@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.IO;
 using System.IO.Abstractions;
+using System.Runtime.CompilerServices;
 using KaraokeCore.Library;
 using KaraokeCore.Parsing;
 using KaraokeCore.Timing;
@@ -10,14 +10,14 @@ namespace KaraokePlayer.Presentation;
 
 public sealed class GameViewModel : INotifyPropertyChanged
 {
-  private const double LyricLeadInMs = 300;
-  private const double ActiveTokenToleranceMs = 50;
-  private const double HighlightOffsetMs = 0;
-  private const int ProgressMax = 100;
-  private const string DefaultElapsedTime = "00:00";
+  private const double _lyricLeadInMs = 300;
+  private const double _activeTokenToleranceMs = 50;
+  private const double _highlightOffsetMs = 0;
+  private const int _progressMax = 100;
+  private const string _defaultElapsedTime = "00:00";
   private readonly MainViewModel _root;
   private double _remainingProgress;
-  private string _elapsedTime = DefaultElapsedTime;
+  private string _elapsedTime = _defaultElapsedTime;
   private string _skipPromptText = KaraokePlayer.Resources.Strings.SkipToFirstNotePrompt;
   private bool _isSkipPromptVisible;
   private string _currentLyricLineText = string.Empty;
@@ -137,7 +137,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
       return;
     }
 
-    if (currentMs < _lyrics[0].StartMs - LyricLeadInMs)
+    if (currentMs < _lyrics[0].StartMs - _lyricLeadInMs)
     {
       _currentLineIndex = -1;
       CurrentLyricLineText = string.Empty;
@@ -186,13 +186,13 @@ public sealed class GameViewModel : INotifyPropertyChanged
     if (totalMs <= 0 || currentMs < 0)
     {
       RemainingProgress = 0;
-      ElapsedTime = DefaultElapsedTime;
+      ElapsedTime = _defaultElapsedTime;
       IsSkipPromptVisible = false;
       return;
     }
 
     var clampedMs = Math.Min(currentMs, totalMs);
-    var percent = clampedMs / totalMs * ProgressMax;
+    var percent = clampedMs / totalMs * _progressMax;
     RemainingProgress = percent;
     ElapsedTime = FormatElapsedTime(clampedMs);
     SkipPromptText = KaraokePlayer.Resources.Strings.SkipToFirstNotePrompt;
@@ -252,7 +252,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
       return Array.Empty<LyricTokenView>();
     }
 
-    var activeIndex = FindActiveTokenIndex(line.Tokens, currentMs + HighlightOffsetMs);
+    var activeIndex = FindActiveTokenIndex(line.Tokens, currentMs + _highlightOffsetMs);
     var tokens = new List<LyricTokenView>(line.Tokens.Count);
     for (var i = 0; i < line.Tokens.Count; i++)
     {
@@ -271,7 +271,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
       return -1;
     }
 
-    if (currentMs < tokens[0].StartMs - ActiveTokenToleranceMs)
+    if (currentMs < tokens[0].StartMs - _activeTokenToleranceMs)
     {
       return -1;
     }
@@ -279,8 +279,8 @@ public sealed class GameViewModel : INotifyPropertyChanged
     for (var i = 0; i < tokens.Count; i++)
     {
       var token = tokens[i];
-      var start = token.StartMs - ActiveTokenToleranceMs;
-      var end = token.EndMs + ActiveTokenToleranceMs;
+      var start = token.StartMs - _activeTokenToleranceMs;
+      var end = token.EndMs + _activeTokenToleranceMs;
       if (currentMs >= start && currentMs < end)
       {
         return i;
@@ -289,7 +289,7 @@ public sealed class GameViewModel : INotifyPropertyChanged
 
     for (var i = 1; i < tokens.Count; i++)
     {
-      if (currentMs < tokens[i].StartMs - ActiveTokenToleranceMs)
+      if (currentMs < tokens[i].StartMs - _activeTokenToleranceMs)
       {
         return i - 1;
       }

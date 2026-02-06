@@ -4,15 +4,15 @@ namespace KaraokeCore.Timing;
 
 public sealed class UltraStarTiming
 {
-  private const double MsPerMinute = 60000.0;
-  private const double BeatMultiplier = 4.0;
-  private const double MinBpm = 0.0;
-  private const int DefaultGapMs = 0;
-  private const int NoNoteBeat = -1;
+  private const double _msPerMinute = 60000.0;
+  private const double _beatMultiplier = 4.0;
+  private const double _minBpm = 0.0;
+  private const int _defaultGapMs = 0;
+  private const int _noNoteBeat = -1;
 
   public UltraStarTiming(double bpm, int gapMs)
   {
-    if (double.IsNaN(bpm) || double.IsInfinity(bpm) || bpm <= MinBpm)
+    if (double.IsNaN(bpm) || double.IsInfinity(bpm) || bpm <= _minBpm)
     {
       throw new ArgumentOutOfRangeException(nameof(bpm), "BPM must be a positive finite value.");
     }
@@ -24,7 +24,7 @@ public sealed class UltraStarTiming
   public double Bpm { get; }
   public int GapMs { get; }
 
-  public double BeatDurationMs => MsPerMinute / (Bpm * BeatMultiplier);
+  public double BeatDurationMs => _msPerMinute / (Bpm * _beatMultiplier);
 
   public double BeatsToMs(int beats)
   {
@@ -49,7 +49,7 @@ public sealed class UltraStarTiming
   public double? FirstNoteStartMs(IReadOnlyList<IUltraStarEvent> events)
   {
     var firstBeat = FirstNoteBeat(events);
-    if (firstBeat == NoNoteBeat)
+    if (firstBeat == _noNoteBeat)
     {
       return null;
     }
@@ -59,7 +59,7 @@ public sealed class UltraStarTiming
 
   public static int FirstNoteBeat(IReadOnlyList<IUltraStarEvent> events)
   {
-    var firstBeat = NoNoteBeat;
+    var firstBeat = _noNoteBeat;
 
     foreach (var evt in events)
     {
@@ -68,7 +68,7 @@ public sealed class UltraStarTiming
         continue;
       }
 
-      if (firstBeat == NoNoteBeat || note.StartBeat < firstBeat)
+      if (firstBeat == _noNoteBeat || note.StartBeat < firstBeat)
       {
         firstBeat = note.StartBeat;
       }
@@ -84,8 +84,8 @@ public sealed class UltraStarTiming
       return null;
     }
 
-    var gap = metadata.GapMs ?? DefaultGapMs;
-    if (metadata.Bpm <= MinBpm)
+    var gap = metadata.GapMs ?? _defaultGapMs;
+    if (metadata.Bpm <= _minBpm)
     {
       return null;
     }

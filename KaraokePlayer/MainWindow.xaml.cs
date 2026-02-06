@@ -7,12 +7,12 @@ namespace KaraokePlayer;
 
 public partial class MainWindow : Window
 {
-  private const int DefaultWindowedWidth = 1280;
-  private const int DefaultWindowedHeight = 720;
-  private const WindowStyle BorderlessStyle = WindowStyle.None;
-  private const WindowStyle WindowedStyle = WindowStyle.SingleBorderWindow;
-  private const ResizeMode BorderlessResize = ResizeMode.NoResize;
-  private const ResizeMode WindowedResize = ResizeMode.CanResize;
+  private const int _defaultWindowedWidth = 1280;
+  private const int _defaultWindowedHeight = 720;
+  private const WindowStyle _borderlessStyle = WindowStyle.None;
+  private const WindowStyle _windowedStyle = WindowStyle.SingleBorderWindow;
+  private const ResizeMode _borderlessResize = ResizeMode.NoResize;
+  private const ResizeMode _windowedResize = ResizeMode.CanResize;
   private readonly MainViewModel _viewModel = new();
   private readonly QueueWebHost _queueWebHost;
   public static readonly RoutedCommand SkipToFirstNoteCommand = new();
@@ -199,14 +199,14 @@ public partial class MainWindow : Window
       case Configuration.WindowModeType.Windowed:
         var settings = Configuration.SettingsService.Instance.Load();
         WindowState = WindowState.Normal;
-        WindowStyle = WindowedStyle;
-        ResizeMode = WindowedResize;
-        Width = settings.WindowedWidth ?? DefaultWindowedWidth;
-        Height = settings.WindowedHeight ?? DefaultWindowedHeight;
+        WindowStyle = _windowedStyle;
+        ResizeMode = _windowedResize;
+        Width = settings.WindowedWidth ?? _defaultWindowedWidth;
+        Height = settings.WindowedHeight ?? _defaultWindowedHeight;
         break;
       default:
-        WindowStyle = BorderlessStyle;
-        ResizeMode = BorderlessResize;
+        WindowStyle = _borderlessStyle;
+        ResizeMode = _borderlessResize;
         WindowState = WindowState.Maximized;
         break;
     }

@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace KaraokePlayer.Views;
@@ -17,9 +16,9 @@ public partial class GameView : System.Windows.Controls.UserControl
   private long _lastKnownTimeMs;
   private DateTime _lastTimeSyncUtc;
   private bool _isScrubbing;
-  private const long SkipMinimumLeadMs = 3000;
-  private const long SkipOffsetMs = 2000;
-  private const long MaxVideoDriftMs = 80;
+  private const long _skipMinimumLeadMs = 3000;
+  private const long _skipOffsetMs = 2000;
+  private const long _maxVideoDriftMs = 80;
 
   public GameView()
   {
@@ -291,12 +290,12 @@ public partial class GameView : System.Windows.Controls.UserControl
 
     var currentMs = _audioPlayer.Time;
     var leadMs = (long)firstNoteMs.Value - currentMs;
-    if (leadMs <= SkipMinimumLeadMs)
+    if (leadMs <= _skipMinimumLeadMs)
     {
       return;
     }
 
-    var targetMs = Math.Max(0, (long)firstNoteMs.Value - SkipOffsetMs);
+    var targetMs = Math.Max(0, (long)firstNoteMs.Value - _skipOffsetMs);
     _audioPlayer.Time = targetMs;
     _lastKnownTimeMs = targetMs;
     _lastTimeSyncUtc = DateTime.UtcNow;
@@ -452,7 +451,7 @@ public partial class GameView : System.Windows.Controls.UserControl
     }
 
     var drift = Math.Abs(_videoPlayer.Time - videoTimeMs);
-    if (drift > MaxVideoDriftMs)
+    if (drift > _maxVideoDriftMs)
     {
       _videoPlayer.Time = videoTimeMs;
     }

@@ -1,22 +1,19 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 using KaraokeCore.Library;
 using KaraokeCore.Parsing;
-using KaraokeCore.Timing;
 using KaraokeCore.Queue;
+using KaraokeCore.Timing;
 
 namespace KaraokePlayer.Presentation;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
-  private const string SongsFolderName = "songs";
-  private const int ProgressStart = 0;
-  private const int ProgressComplete = 100;
+  private const string _songsFolderName = "songs";
+  private const int _progressStart = 0;
+  private const int _progressComplete = 100;
   private readonly string _basePath;
   private readonly System.IO.Abstractions.IFileSystem _fileSystem;
   private readonly Configuration.SettingsService _settingsService;
@@ -214,7 +211,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     RunOnUiThread(() =>
     {
       Status = KaraokePlayer.Resources.Strings.StatusLoading;
-      LoadingProgress = ProgressStart;
+      LoadingProgress = _progressStart;
       LoadingCount = "Imported: 0";
       IsLoadingComplete = false;
       IsLoading = true;
@@ -222,7 +219,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     var settings = _settingsService.Load();
     var songsPath = string.IsNullOrWhiteSpace(settings.SongsFolderPath)
-      ? _fileSystem.Path.Combine(_basePath, SongsFolderName)
+      ? _fileSystem.Path.Combine(_basePath, _songsFolderName)
       : settings.SongsFolderPath;
     RunOnUiThread(() => LibraryPath = songsPath);
 
@@ -252,7 +249,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
           ? KaraokePlayer.Resources.Strings.StatusMissing
           : KaraokePlayer.Resources.Strings.StatusLoaded;
         LoadingCount = $"Imported: {entries.Count}";
-        LoadingProgress = ProgressComplete;
+        LoadingProgress = _progressComplete;
         IsLoadingComplete = true;
       });
       completedSuccessfully = true;

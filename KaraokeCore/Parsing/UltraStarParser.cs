@@ -6,21 +6,21 @@ namespace KaraokeCore.Parsing;
 
 public sealed class UltraStarParser
 {
-  private const int LeadIndex = 0;
-  private const int MetadataKeyStartIndex = 1;
-  private const int MinimumColonIndex = 1;
-  private const int MinimumKeyLength = 1;
-  private const int ValueOffsetFromColon = 1;
-  private const int NoteMinimumParts = 4;
-  private const int FirstPartIndex = 1;
-  private const int SecondPartIndex = 2;
-  private const int ThirdPartIndex = 3;
-  private const int FourthPartIndex = 4;
-  private const int PhraseMinimumParts = 2;
-  private const int PlayerMarkerMinimumLength = 2;
-  private const int NotePartsCapacity = 5;
-  private const int MaxSpacesInNote = 4;
-  private const int DefaultIntValue = 0;
+  private const int _leadIndex = 0;
+  private const int _metadataKeyStartIndex = 1;
+  private const int _minimumColonIndex = 1;
+  private const int _minimumKeyLength = 1;
+  private const int _valueOffsetFromColon = 1;
+  private const int _noteMinimumParts = 4;
+  private const int _firstPartIndex = 1;
+  private const int _secondPartIndex = 2;
+  private const int _thirdPartIndex = 3;
+  private const int _fourthPartIndex = 4;
+  private const int _phraseMinimumParts = 2;
+  private const int _playerMarkerMinimumLength = 2;
+  private const int _notePartsCapacity = 5;
+  private const int _maxSpacesInNote = 4;
+  private const int _defaultIntValue = 0;
 
   public UltraStarSong ParseFromFile(string path)
   {
@@ -48,7 +48,7 @@ public sealed class UltraStarParser
         continue;
       }
 
-      var lead = line[LeadIndex];
+      var lead = line[_leadIndex];
       if (lead == ':' || lead == '*' || lead == 'F' || lead == 'R' || lead == 'G')
       {
         var note = ParseNoteLine(line);
@@ -88,24 +88,24 @@ public sealed class UltraStarParser
   private static void ParseMetadata(string line, Dictionary<string, string> metadata)
   {
     var colonIndex = line.IndexOf(':');
-    if (colonIndex <= MinimumColonIndex)
+    if (colonIndex <= _minimumColonIndex)
     {
       return;
     }
 
-    var key = line[MetadataKeyStartIndex..colonIndex].Trim();
-    if (key.Length < MinimumKeyLength)
+    var key = line[_metadataKeyStartIndex..colonIndex].Trim();
+    if (key.Length < _minimumKeyLength)
     {
       return;
     }
 
-    var value = line[(colonIndex + ValueOffsetFromColon)..].Trim();
+    var value = line[(colonIndex + _valueOffsetFromColon)..].Trim();
     metadata[key] = value;
   }
 
   private static NoteEvent ParseNoteLine(string line)
   {
-    var noteType = line[LeadIndex] switch
+    var noteType = line[_leadIndex] switch
     {
       ':' => NoteType.Normal,
       '*' => NoteType.Golden,
@@ -116,15 +116,15 @@ public sealed class UltraStarParser
     };
 
     var parts = SplitNoteLine(line);
-    if (parts.Length < NoteMinimumParts)
+    if (parts.Length < _noteMinimumParts)
     {
-      return new NoteEvent(noteType, DefaultIntValue, DefaultIntValue, DefaultIntValue, string.Empty);
+      return new NoteEvent(noteType, _defaultIntValue, _defaultIntValue, _defaultIntValue, string.Empty);
     }
 
-    var startBeat = ParseInt(parts[FirstPartIndex]);
-    var length = ParseInt(parts[SecondPartIndex]);
-    var pitch = ParseInt(parts[ThirdPartIndex]);
-    var text = parts.Length > NoteMinimumParts ? parts[FourthPartIndex] : string.Empty;
+    var startBeat = ParseInt(parts[_firstPartIndex]);
+    var length = ParseInt(parts[_secondPartIndex]);
+    var pitch = ParseInt(parts[_thirdPartIndex]);
+    var text = parts.Length > _noteMinimumParts ? parts[_fourthPartIndex] : string.Empty;
 
     return new NoteEvent(noteType, startBeat, length, pitch, text);
   }
@@ -132,19 +132,19 @@ public sealed class UltraStarParser
   private static PhraseEndEvent? ParsePhraseEnd(string line)
   {
     var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-    if (parts.Length < PhraseMinimumParts)
+    if (parts.Length < _phraseMinimumParts)
     {
       return null;
     }
 
-    var startBeat = ParseInt(parts[FirstPartIndex]);
+    var startBeat = ParseInt(parts[_firstPartIndex]);
     return new PhraseEndEvent(startBeat);
   }
 
   private static PlayerMarkerEvent? ParsePlayerMarker(string line)
   {
     var marker = line.Trim();
-    if (marker.Length < PlayerMarkerMinimumLength)
+    if (marker.Length < _playerMarkerMinimumLength)
     {
       return null;
     }
@@ -154,16 +154,16 @@ public sealed class UltraStarParser
 
   private static string[] SplitNoteLine(string line)
   {
-    var parts = new List<string>(NotePartsCapacity);
+    var parts = new List<string>(_notePartsCapacity);
     var current = new StringBuilder();
-    var spaceCount = DefaultIntValue;
+    var spaceCount = _defaultIntValue;
 
-    for (var i = DefaultIntValue; i < line.Length; i++)
+    for (var i = _defaultIntValue; i < line.Length; i++)
     {
       var ch = line[i];
-      if (ch == ' ' && spaceCount < MaxSpacesInNote)
+      if (ch == ' ' && spaceCount < _maxSpacesInNote)
       {
-        if (current.Length > DefaultIntValue)
+        if (current.Length > _defaultIntValue)
         {
           parts.Add(current.ToString());
           current.Clear();
@@ -175,7 +175,7 @@ public sealed class UltraStarParser
       current.Append(ch);
     }
 
-    if (current.Length > DefaultIntValue)
+    if (current.Length > _defaultIntValue)
     {
       parts.Add(current.ToString());
     }
@@ -190,6 +190,6 @@ public sealed class UltraStarParser
       return result;
     }
 
-    return DefaultIntValue;
+    return _defaultIntValue;
   }
 }

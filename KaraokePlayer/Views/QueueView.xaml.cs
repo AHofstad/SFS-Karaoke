@@ -1,17 +1,14 @@
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace KaraokePlayer.Views;
 
 public partial class QueueView : System.Windows.Controls.UserControl
 {
-  private const double DefaultOverlayHeight = 220d;
-  private const double DefaultBaseHeight = 720d;
-  private const double DragThreshold = 4d;
+  private const double _defaultOverlayHeight = 220d;
+  private const double _dragThreshold = 4d;
   private LibVLCSharp.Shared.LibVLC? _libVlc;
   private LibVLCSharp.Shared.MediaPlayer? _audioPlayer;
   private LibVLCSharp.Shared.MediaPlayer? _videoPlayer;
@@ -19,7 +16,7 @@ public partial class QueueView : System.Windows.Controls.UserControl
   private Window? _hostWindow;
   private QueueOverlayWindow? _overlayWindow;
   private System.Windows.Point _dragStartPoint;
-  private const long MaxVideoDriftMs = 80;
+  private const long _maxVideoDriftMs = 80;
 
   public QueueView()
   {
@@ -75,8 +72,8 @@ public partial class QueueView : System.Windows.Controls.UserControl
     }
 
     var position = e.GetPosition(null);
-    if (Math.Abs(position.X - _dragStartPoint.X) < DragThreshold
-        && Math.Abs(position.Y - _dragStartPoint.Y) < DragThreshold)
+    if (Math.Abs(position.X - _dragStartPoint.X) < _dragThreshold
+        && Math.Abs(position.Y - _dragStartPoint.Y) < _dragThreshold)
     {
       return;
     }
@@ -352,7 +349,7 @@ public partial class QueueView : System.Windows.Controls.UserControl
       return;
     }
 
-    var overlayBaseHeight = FindResource("QueueOverlayHeight") as double? ?? DefaultOverlayHeight;
+    var overlayBaseHeight = FindResource("QueueOverlayHeight") as double? ?? _defaultOverlayHeight;
     var scale = previewHeight <= 0 ? 1d : renderedHeight / previewHeight;
     if (scale <= 0)
     {
@@ -488,7 +485,7 @@ public partial class QueueView : System.Windows.Controls.UserControl
     }
 
     var drift = Math.Abs(_videoPlayer.Time - videoTimeMs);
-    if (drift > MaxVideoDriftMs)
+    if (drift > _maxVideoDriftMs)
     {
       _videoPlayer.Time = videoTimeMs;
     }

@@ -1,14 +1,14 @@
+using System.IO.Abstractions;
 using KaraokeCore.Models;
 using KaraokeCore.Parsing;
-using System.IO.Abstractions;
 
 namespace KaraokeCore.Library;
 
 public sealed class SongLibraryScanner
 {
-  private static readonly string[] AudioExtensions = [".mp3", ".ogg", ".wav", ".flac"];
-  private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".webm"];
-  private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".bmp"];
+  private static readonly string[] _audioExtensions = [".mp3", ".ogg", ".wav", ".flac"];
+  private static readonly string[] _videoExtensions = [".mp4", ".mkv", ".avi", ".webm"];
+  private static readonly string[] _imageExtensions = [".jpg", ".jpeg", ".png", ".bmp"];
 
   private readonly IFileSystem _fileSystem;
 
@@ -79,10 +79,10 @@ public sealed class SongLibraryScanner
       metadata = parser.Parse(lines).Metadata;
     }
 
-    var audioPath = ResolveMediaPath(folder, metadata?.Audio, AudioExtensions);
-    var videoPath = ResolveMediaPath(folder, metadata?.Video, VideoExtensions);
-    var coverPath = ResolveMediaPath(folder, metadata?.Cover, ImageExtensions);
-    var backgroundPath = ResolveMediaPath(folder, metadata?.Background, ImageExtensions);
+    var audioPath = ResolveMediaPath(folder, metadata?.Audio, _audioExtensions);
+    var videoPath = ResolveMediaPath(folder, metadata?.Video, _videoExtensions);
+    var coverPath = ResolveMediaPath(folder, metadata?.Cover, _imageExtensions);
+    var backgroundPath = ResolveMediaPath(folder, metadata?.Background, _imageExtensions);
 
     return new SongEntry(folder, txtPath, metadata, audioPath, videoPath, coverPath, backgroundPath);
   }

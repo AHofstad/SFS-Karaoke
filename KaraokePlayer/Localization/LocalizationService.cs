@@ -9,7 +9,7 @@ namespace KaraokePlayer.Localization;
 
 public sealed class LocalizationService : INotifyPropertyChanged
 {
-  private const string DefaultLanguageCode = "en-US";
+  private const string _defaultLanguageCode = "en-US";
   private readonly SettingsService _settingsService;
 
   private LanguageOption _currentLanguage;
@@ -21,8 +21,8 @@ public sealed class LocalizationService : INotifyPropertyChanged
     _settingsService = settingsService;
     Languages = new ObservableCollection<LanguageOption>
     {
-      new LanguageOption("en-US", "English"),
-      new LanguageOption("nl-NL", "Nederlands"),
+      new("en-US", "English"),
+      new("nl-NL", "Nederlands"),
     };
 
     var settings = _settingsService.Load();
@@ -46,7 +46,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
       ApplyCulture(_currentLanguage.Code);
       _settingsService.Save(new AppSettings { LanguageCode = _currentLanguage.Code });
       OnPropertyChanged();
-      OnPropertyChanged(IndexerPropertyName);
+      OnPropertyChanged(_indexerPropertyName);
     }
   }
 
@@ -63,7 +63,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
   private void ApplyCulture(string? cultureCode)
   {
-    var code = string.IsNullOrWhiteSpace(cultureCode) ? DefaultLanguageCode : cultureCode;
+    var code = string.IsNullOrWhiteSpace(cultureCode) ? _defaultLanguageCode : cultureCode;
     var culture = new CultureInfo(code);
 
     CultureInfo.DefaultThreadCurrentCulture = culture;
@@ -86,5 +86,5 @@ public sealed class LocalizationService : INotifyPropertyChanged
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
   }
 
-  private const string IndexerPropertyName = "Item[]";
+  private const string _indexerPropertyName = "Item[]";
 }

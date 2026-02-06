@@ -1,13 +1,12 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using KaraokeCore.Library;
-using System.Collections.ObjectModel;
 
 namespace KaraokePlayer.Presentation;
 
 public sealed class QueueViewModel : INotifyPropertyChanged
 {
-  private const int PreviewWindowSize = 7;
+  private const int _previewWindowSize = 7;
   private readonly MainViewModel _root;
   private IReadOnlyList<PreviewSongItem> _previewItems = Array.Empty<PreviewSongItem>();
   private SongEntry? _selectedQueueItem;
@@ -138,7 +137,7 @@ public sealed class QueueViewModel : INotifyPropertyChanged
       selectedIndex = 0;
     }
 
-    var windowSize = Math.Min(PreviewWindowSize, Library.Count);
+    var windowSize = Math.Min(_previewWindowSize, Library.Count);
     if (windowSize % 2 == 0)
     {
       windowSize -= 1;

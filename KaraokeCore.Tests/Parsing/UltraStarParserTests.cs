@@ -6,7 +6,7 @@ namespace KaraokeCore.Tests.Parsing;
 
 public class UltraStarParserTests
 {
-  private const string Sample = """
+  private const string _sample = """
   #TITLE:Silhouette (Filthy Frank Anime OP ver)
   #ARTIST:KANA-BOON
   #LANGUAGE:Japanese
@@ -256,7 +256,7 @@ public class UltraStarParserTests
   E
   """;
 
-  private const string ExtendedSample = """
+  private const string _extendedSample = """
   #VERSION:1.1.0
   #TITLE:Night Drive
   #ARTIST:The Examples
@@ -291,7 +291,7 @@ public class UltraStarParserTests
   E
   """;
 
-  private const string MultiAudioSample = """
+  private const string _multiAudioSample = """
   #VERSION:1.1.0
   #TITLE:Legacy Audio
   #ARTIST:Legacy Artist
@@ -302,7 +302,7 @@ public class UltraStarParserTests
   E
   """;
 
-  private const string EdgeCasesSample = """
+  private const string _edgeCasesSample = """
   #title:Case Insensitive
   #ARTIST:Edge Artist
   #BPM:not-a-number
@@ -322,7 +322,7 @@ public class UltraStarParserTests
   E
   """;
 
-  private const string MalformedSample = """
+  private const string _malformedSample = """
   #TITLE MissingColon
   #ARTIST:Has Artist
   X this should be ignored
@@ -340,7 +340,7 @@ public class UltraStarParserTests
     var parser = new UltraStarParser();
 
     // Act
-    var song = parser.Parse(Sample.Split('\n'));
+    var song = parser.Parse(_sample.Split('\n'));
 
     // Assert
     Assert.That(song.Metadata.Title, Is.EqualTo("Silhouette (Filthy Frank Anime OP ver)"));
@@ -373,7 +373,7 @@ public class UltraStarParserTests
     var parser = new UltraStarParser();
 
     // Act
-    var song = parser.Parse(ExtendedSample.Split('\n'));
+    var song = parser.Parse(_extendedSample.Split('\n'));
 
     // Assert
     Assert.That(song.Metadata.Version, Is.EqualTo("1.1.0"));
@@ -413,7 +413,7 @@ public class UltraStarParserTests
     var parser = new UltraStarParser();
 
     // Act
-    var song = parser.Parse(MultiAudioSample.Split('\n'));
+    var song = parser.Parse(_multiAudioSample.Split('\n'));
 
     // Assert
     Assert.That(song.Metadata.Audio, Is.EqualTo("legacy.mp3"));
@@ -430,7 +430,7 @@ public class UltraStarParserTests
     var parser = new UltraStarParser();
 
     // Act
-    var song = parser.Parse(EdgeCasesSample.Split('\n'));
+    var song = parser.Parse(_edgeCasesSample.Split('\n'));
 
     // Assert
     Assert.That(song.Metadata.Title, Is.EqualTo("Case Insensitive"));
@@ -468,7 +468,7 @@ public class UltraStarParserTests
     var parser = new UltraStarParser();
 
     // Act
-    var song = parser.Parse(MalformedSample.Split('\n'));
+    var song = parser.Parse(_malformedSample.Split('\n'));
 
     // Assert
     Assert.That(song.Metadata.Title, Is.Null);
